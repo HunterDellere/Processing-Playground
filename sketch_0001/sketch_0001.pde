@@ -4,15 +4,16 @@ ArrayList<Particle> particles = new ArrayList<Particle>();
 
 float zoff = 0;
 
-int detail = 500;
-float rate = 0.0003;
-float inc = 0.05; //increments of the perlin noise field. More movement with higher increments.
-int scl = 40;
+int detail = 2000;
+float rate = 0.0002;
+float inc = 0.07; //increments of the perlin noise field. More movement with higher increments.
+int scl = 25;
 int cols, rows, index;
 ArrayList<PVector> flowfield = new ArrayList<PVector>();
 
 void setup() {
   size(1000, 1000);
+  background(98, 139, 153);
   cols = floor(width / scl);
   rows = floor(height / scl);
 
@@ -27,14 +28,14 @@ void setup() {
 }
 
 void draw() {
-  background(255);
+  //background(255);
   float yoff = 0;
   for (int y = 0; y < rows; y++) {
     float xoff = 0;
     for (int x=0; x < cols; x++) {
       stroke(0, 50);
       noiseDetail(2); // # of octaves for the Perlin noise which correlate to character & detail.
-      v = PVector.fromAngle(noise(xoff, yoff, zoff) * TWO_PI);
+      v = PVector.fromAngle(noise(xoff, yoff, zoff) * TWO_PI * 2);
       index = floor(x + y * cols);
       flowfield.set(index, v);
       xoff += inc;
@@ -49,7 +50,7 @@ void draw() {
     yoff += inc;
     zoff += rate;
     for (int i = 0; i < particles.size(); i++) {
-      particles.get(i).follow(flowfield);//PVector.fromAngle(noise(xoff, yoff, zoff) * TWO_PI * 8));
+      particles.get(i).follow(flowfield);
       particles.get(i).update();
       particles.get(i).edges();
       particles.get(i).display();

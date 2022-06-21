@@ -5,26 +5,28 @@ class Particle {
   PVector prevPos;
 
   Particle() {
-    pos = new PVector(random(0, width), random(0, height));
+    pos = new PVector(random(0, renderWidth), random(0, renderHeight));
     vel = new PVector(random(-.001, .001), random(-.001, .001));
     acc = new PVector(0, 0);
     prevPos = pos.copy();
   }
 
   void update() {
-    vel.add(acc).limit(.2);
+    vel.add(acc).limit(.05);
     pos.add(vel);
     acc.mult(0);
   }
 
   void applyForce(PVector force) {
-    acc.add(force);
+    acc.add(force).limit(.001);
   }
 
-  void display() {
-    stroke(230, 202, 125, 3);
-    strokeWeight(1);
-    line(pos.x, pos.y, prevPos.x, prevPos.y);
+  void display(PGraphics ren, int x, int y, int rad, float r, float g, float b, float alpha) {
+    ren.stroke(r, g, b, alpha);
+    ren.strokeWeight(alpha%(scl/2));
+    if (dist(x, y, pos.x, pos.y) < rad) {
+      ren.line(pos.x, pos.y, prevPos.x, prevPos.y);
+    }
     this.updatePrev();
     //circle(pos.x, pos.y, 5);
   }
@@ -35,20 +37,20 @@ class Particle {
   }
 
   void edges() {
-    if (pos.x > width) {
+    if (pos.x > renderWidth) {
       pos.x = 0;
       this.updatePrev();
     }
     if (pos.x < 0) {
-      pos.x = width;
+      pos.x = renderWidth;
       this.updatePrev();
     }
-    if (pos.y > height) {
+    if (pos.y > renderHeight) {
       pos.y = 0;
       this.updatePrev();
     }
     if (pos.y < 0) {
-      pos.y = height;
+      pos.y = renderHeight;
       this.updatePrev();
     }
   }
@@ -59,7 +61,7 @@ class Particle {
     index = floor(x + y * cols);
     PVector force = vectors.get(index);
     //PVector force = new PVector(0,0);
-    force.setMag(.0005);
+    force.setMag(.00005);
     this.applyForce(force);
   }
 }

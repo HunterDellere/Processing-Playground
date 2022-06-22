@@ -1,3 +1,6 @@
+import peasy.*;
+
+PeasyCam cam;
 PGraphics _render;
 
 // Render configuration
@@ -26,16 +29,19 @@ ArrayList<Node> nodes = new ArrayList();
 color colors[] = new color[5];
 
 // Initialization
-int seed = 10;
+int seed = 7;
 boolean firstFrame = true;
 
 
 // Setup
 
 void setup() {
-  size(1024, 1024, P2D);
-  colorMode(HSB, 360, 100, 100, 100);
-  blendMode(ADD);
+  size(750, 750, P3D);
+  //ortho(-width/2, width/2, -height/2, height/2);
+  cam = new PeasyCam(this, 500, 500, 500, 100);
+  cam.setMinimumDistance(50);
+  cam.setMaximumDistance(500);
+  //blendMode(BLEND);
   doReset();
 }
 
@@ -79,7 +85,7 @@ void doReset() {
       float y = midY + r * sin(a);
       float life = 100*abs(sin(i)*sin(i));
       float mass = 5*radius*abs(cos(i)*sin(i));
-      nodes.add(new Node(x, y, life, mass, palette[(int)(i*layer)%palette.length]));
+      nodes.add(new Node(x, y, Z, life, mass, color(palette[(int)(i*layer)%palette.length])));
     }
   }
   redraw();
@@ -133,14 +139,14 @@ void draw() {
 
   float ratio = renderWidth / (float)renderHeight;
   if (ratio > 1) {
-    outWidth = 1024;
+    outWidth = 750;
     outHeight = (int)(outWidth / ratio);
   } else {
-    outHeight = 1024;
+    outHeight = 750;
     outWidth = (int)(outHeight * ratio);
   }
 
-  image(_render, (1024 - outWidth) / 2, (1024 - outHeight) / 2, outWidth, outHeight);
+  image(_render, (750 - outWidth) / 2, (750 - outHeight) / 2, outWidth, outHeight);
 
   if (capture) {
     String _id = String.format("captures/%d%02d%02d.%02d.%02d/", year(), month(), day(), hour(), minute());
@@ -151,7 +157,7 @@ void draw() {
 // Where the magic happens
 
 void magic(PGraphics r) {
-  r.background(0, 50);
+  r.background(0, 0, 0, 1);
   push();
   for (Node node : nodes) {
     node.run(r);
@@ -161,7 +167,7 @@ void magic(PGraphics r) {
 
 // Set backgound
 void setBackground(PGraphics _render) {
-  _render.background(random(1, 10));
+  _render.background(0);
 }
 
 // Create a random palette

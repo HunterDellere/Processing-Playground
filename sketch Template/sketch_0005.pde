@@ -1,3 +1,5 @@
+import nice.palettes.*;
+
 PGraphics _render;
 
 // Render configuration
@@ -35,7 +37,7 @@ boolean firstFrame = true;
 void setup() {
   size(1024, 1024, P2D);
   colorMode(HSB, 360, 100, 100, 100);
-  blendMode(ADD);
+  blendMode(BLEND);
   doReset();
 }
 

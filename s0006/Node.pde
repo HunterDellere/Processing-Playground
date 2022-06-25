@@ -19,11 +19,11 @@ class Node {
     _color = c;
   }
 
-  void run(PGraphics r) {
+  void run() {
     //this.follow();
     this.update();
     this.edges();
-    this.display(r);
+    this.display();
   }
 
   void update() {
@@ -34,24 +34,10 @@ class Node {
     acc.mult(0);
   }
 
-  void display(PGraphics r) {
-    //float alpha = alpha(_color);
-    //println(hex(_color));
-    //r.fill(_color);
-    //r.strokeWeight(20);
-    //r.circle(pos.x, pos.y, mass);
-    
-    //int phase = (int)map(life, 0, 100, 0, 100);
-    
-    //println(hex(_color, 6));
-    //println(hex(phase).substring(6, 8));
-    //_color = unhex(hex(_color, 6) + hex(phase).substring(6, 8));
-    //println(hex(_color));
-    //println();
-    r.noStroke();
-    r.fill(_color);
-    //r.strokeWeight(20);
-    r.rect(pos.x, pos.y, mass, life);
+  void display() {
+    translate(pos.x, pos.y, pos.z);
+    fill(255, 50);
+    box(mass);
   }
 
   void age() {
@@ -76,28 +62,28 @@ class Node {
   }
 
   void edges() {
-    if (pos.x > renderWidth + mass) {
+    if (pos.x > width + mass) {
       pos.x = 0 - mass / 2;
       this.updatePrev();
     }
     if (pos.x < 0 - mass) {
-      pos.x = renderWidth + mass / 2;
+      pos.x = width + mass / 2;
       this.updatePrev();
     }
-    if (pos.y > renderHeight + mass) {
+    if (pos.y > height + mass) {
       pos.y = 0 - mass /2;
       this.updatePrev();
     }
     if (pos.y < 0 - mass) {
-      pos.y = renderHeight + mass / 2;
+      pos.y = height + mass / 2;
       this.updatePrev();
     }
   }
 
   void follow() {
     noiseDetail(1); // # of octaves for the Perlin noise which correlate to character & detail.
-    float midX = renderWidth / 2;
-    float midY = renderHeight / 2;
+    float midX = width / 2;
+    float midY = height / 2;
     PVector centerForce = new PVector(pos.x-midX, pos.y-midY);
     float dampen = pow(2, 3);
     PVector force = PVector.fromAngle(noise(pos.x/dampen, pos.y/dampen) * TWO_PI * random(0, 3));

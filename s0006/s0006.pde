@@ -1,96 +1,57 @@
 import peasy.*;
 
 PeasyCam cam;
-PGraphics _render;
 
-// Render configuration
+long seed;
+float r;
+int total;
+int outHeight, outWidth;
+
+Node[][] cloud;
+
+boolean firstFrame = true;
 boolean renderHighRes = true;
 boolean capture = false;
 
-// Paramaters
-float maxAngle;
-int segments;
-int layers;
-
-
-// Print setup
-int printWidth = 10;
-int printHeight = 10;
-int printDpi = 300;
-int previewDpi = 72;
-int renderWidth;
-int renderHeight;
-float scaleFactor = 1;
-int outWidth, outHeight;
-
-// Variable creation
-ArrayList <PVector> vectors = new ArrayList();
-ArrayList<Node> nodes = new ArrayList();
-color colors[] = new color[5];
-
-// Initialization
-int seed = 7;
-boolean firstFrame = true;
-
-
-// Setup
-
 void setup() {
-  size(750, 750, P3D);
-  //ortho(-width/2, width/2, -height/2, height/2);
-  cam = new PeasyCam(this, 500, 500, 500, 100);
-  cam.setMinimumDistance(50);
-  cam.setMaximumDistance(500);
-  //blendMode(BLEND);
+  size(1000, 1000, P3D);
+  cam = new PeasyCam(this, 1500);
+  surface.setResizable(true);
+  surface.setLocation(100, 100);
   doReset();
 }
 
 // Reset
 
 void doReset() {
-  nodes.clear();
   clear();
 
-  int dpi = renderHighRes ? printDpi : previewDpi;
-  scaleFactor = dpi / (float)previewDpi;
-  renderWidth = printWidth * dpi;
-  renderHeight = printHeight * dpi;
-
-  _render = createGraphics(renderWidth, renderHeight, P2D);
+  seed = (long)random(999);
+  total = 25;
   firstFrame = true;
+  r = 500;
+  color[] palette = myPalettes[floor(random(0, myPalettes.length))]; // some subset of the selected palette
+
 
   // set new parameters
   println("The new seed is: " + seed);
   randomSeed(seed);
-  
-  float maxAngle = random(4, 100) * TWO_PI;
-  float radius = 150;  
-  layers = (int)(min(renderWidth, renderHeight) / (radius));
-  float depth = random(1,5);
-  segments = (int)(random(500, 2500));
-  Palette();
 
-  color[] palette = myPalettes[floor(random(0, myPalettes.length))];
-  // Pre-load
-  for (int i = 0; i < depth; i++) {
-    float midX = renderWidth/2;
-    float midY = renderHeight/2;
-    float layer = 0;
-    for (float a = 0; a < maxAngle; a += maxAngle/segments) {
+  cloud = new Node[total+1][total+1];
 
-      layer = floor(a/(maxAngle/TWO_PI)); //(floor((segments/layers)));
-      float r = layer * radius;
-
-      float x = midX + r * cos(a);
-      float y = midY + r * sin(a);
-      float life = 100*abs(sin(i)*sin(i));
-      float mass = 5*radius*abs(cos(i)*sin(i));
-      nodes.add(new Node(x, y, Z, life, mass, color(palette[(int)(i*layer)%palette.length])));
+  //pre-load
+  for (int i = 0; i < total + 1; i++) {
+    float lat = map(i, 0, total, 0, PI);
+    //float r2 = pow(pow(abs(cos(m2 * lat / 4) / a),
+    for (int j = 0; j < total + 1; j++) {
+      float lon = map(j, 0, total, 0, TWO_PI);
+      float x = r * sin(lat) * cos(lon);
+      float y = r * sin(lat) * sin(lon);
+      float z = r * cos(lat);
+      cloud[i][j] = new Node(x, y, z, 100, 1, palette[(int)(i)%palette.length]);
     }
   }
-  redraw();
 }
-
 // Render controls
 
 void keyPressed() {
@@ -98,7 +59,7 @@ void keyPressed() {
   case 's':
     String dateString = String.format("screenshots/%d-%02d-%02d %02d.%02d.%02d", year(), month(), day(), hour(), minute(), second());
     //saveFrame(dateString + ".scr.png");
-    _render.save(dateString + ".TIFF");
+    save(dateString + ".TIFF");
     println("Screenshot saved");
     break;
 
@@ -126,18 +87,34 @@ void keyPressed() {
 // Draw
 
 void draw() {
-  _render.beginDraw();
+  //_render.beginDraw();
 
   if (firstFrame) {
     firstFrame = false;
-    setBackground(_render);
+    setBackground();
   }
 
-  magic(_render);
-  _render.endDraw();
+  background(0);
+  lights();
+  
+  stroke(255);
+  
+  
+  for (int i = 0; i < total; i++) {
+    beginShape(TRIANGLE_STRIP);
+    for (int j = 0; j < total + 1; j++) {
+      PVector v1 = cloud[i][j].pos;
+      PVector v2 = cloud[i+1][j].pos;
+      vertex(v1.x, v1.y, v1.z);
+      vertex(v2.x, v2.y, v2.z);
+    }
+    endShape();
+  }
+  //magic();
+  //_render.endDraw();
 
 
-  float ratio = renderWidth / (float)renderHeight;
+  float ratio = width / (float)height;
   if (ratio > 1) {
     outWidth = 750;
     outHeight = (int)(outWidth / ratio);
@@ -146,7 +123,7 @@ void draw() {
     outWidth = (int)(outHeight * ratio);
   }
 
-  image(_render, (750 - outWidth) / 2, (750 - outHeight) / 2, outWidth, outHeight);
+  //image(_render, (750 - outWidth) / 2, (750 - outHeight) / 2, outWidth, outHeight);
 
   if (capture) {
     String _id = String.format("captures/%d%02d%02d.%02d.%02d/", year(), month(), day(), hour(), minute());
@@ -154,32 +131,21 @@ void draw() {
   }
 }
 
-// Where the magic happens
-
-void magic(PGraphics r) {
-  r.background(0, 0, 0, 1);
-  push();
-  for (Node node : nodes) {
-    node.run(r);
-  }
-  pop();
-}
-
 // Set backgound
-void setBackground(PGraphics _render) {
-  _render.background(0);
+void setBackground() {
+  background(0);
 }
 
-// Create a random palette
-void Palette() {
-  int hue = round(random(360));
-  int r1  = round(random(180));
-  colors[0] = color(hue - (r1*2), round(random(100)), round(random(100)));
-  colors[1] = color(hue - r1, round(random(100)), round(random(100)));
-  colors[2] = color(hue, round(random(100)), round(random(100)));
-  colors[3] = color(hue + r1, round(random(100)), round(random(100)));
-  colors[4] = color(hue + (r1*2), round(random(100)), round(random(100)));
-}
+//// Create a random palette
+//void Palette() {
+//  int hue = round(random(360));
+//  int r1  = round(random(180));
+//  colors[0] = color(hue - (r1*2), round(random(100)), round(random(100)));
+//  colors[1] = color(hue - r1, round(random(100)), round(random(100)));
+//  colors[2] = color(hue, round(random(100)), round(random(100)));
+//  colors[3] = color(hue + r1, round(random(100)), round(random(100)));
+//  colors[4] = color(hue + (r1*2), round(random(100)), round(random(100)));
+//}
 
 // Curated color palettes
 color[][] myPalettes = {

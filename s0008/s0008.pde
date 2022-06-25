@@ -15,13 +15,13 @@ float border, frame;
 float innerBorderPercent;
 
 // Print setup
-int printWidth = 10;
-int printHeight = 10;
+int printWidth = 10; // in inches
+int printHeight = 10; // in inches
 int printDpi = 300;
 int previewDpi = 72;
 int renderWidth;
 int renderHeight;
-float scaleFactor = 1;
+float scaleFactor;
 int outWidth, outHeight;
 
 // Variable creation
@@ -69,15 +69,16 @@ void doReset() {
   // Load a palette from curated palettes
   color[] palettes = myPalettes[floor(random(0, myPalettes.length))];
 
-  // Pre-load
+  // CONFIGURE PARAMETERS 
+  
   border = min(renderHeight, renderWidth)/20;
   size = random(5, 200);
-  float packFactor = random(20, 50);
+  float packFactor = random(5, 50);
   space = ((min(renderHeight, renderWidth) - 2*border) - packFactor*size) / (packFactor - 1);
   cols = floor((renderWidth - 2*border) / (size + space));
   rows = floor((renderHeight - 2*border) / (size + space));
   fidelity = floor(random(3, 10));
-  maxNoiseAngle = random(2) * TWO_PI;
+  maxNoiseAngle = random(3) * TWO_PI;
   noiseFieldRate = 1 / random(999, 999999);
   midX = renderWidth/2;
   midY = renderHeight/2;
@@ -93,8 +94,9 @@ void doReset() {
       float x = offset + i * size + (i > 1 ? space * i : 0);
       float y = offset + j * size + (j > 1 ? space * j: 0);
 
-      float life = 100*abs(sin(i)*sin(j));
-      float mass = size;
+      float genes = random(2, random(2, 10));
+      float life = constrain(100 * genes, 0, 100);//*abs(sin(i)*sin(j));
+      float mass = random(size, size * genes);
       color c = palettes[(int)(abs(cos(i+seed)*sin(j)*seed))%palettes.length];
 
       agents.add(new Agent(x, y, life, mass, c));

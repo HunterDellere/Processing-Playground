@@ -72,8 +72,8 @@ void doReset() {
   // Pre-load
   border = min(renderHeight, renderWidth)/20;
   size = random(5, 200);
-  float packFactor = 1 / random(20, 50);
-  space = (min(renderHeight, renderWidth) - 2*border) * packFactor -size;
+  float packFactor = random(20, 50);
+  space = ((min(renderHeight, renderWidth) - 2*border) - packFactor*size) / (packFactor - 1);
   cols = floor((renderWidth - 2*border) / (size + space));
   rows = floor((renderHeight - 2*border) / (size + space));
   fidelity = floor(random(3, 10));

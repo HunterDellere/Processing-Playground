@@ -15,9 +15,9 @@ float border, frame;
 float innerBorderPercent;
 
 // Print setup
-int printWidth = 10; // in inches
-int printHeight = 10; // in inches
-int printDpi = 300;
+int printWidth = 4; // in inches
+int printHeight = 4; // in inches
+int printDpi = 350;
 int previewDpi = 72;
 int renderWidth;
 int renderHeight;
@@ -67,42 +67,45 @@ void doReset() {
   randomSeed(seed);
 
   // Load a palette from curated palettes
-  color[] palettes = myPalettes[floor(random(0, myPalettes.length))];
+  color[] palette = myPalettes[floor(random(0, myPalettes.length))];
 
-  // CONFIGURE PARAMETERS 
-  
+  // CONFIGURE PARAMETERS
+
   border = min(renderHeight, renderWidth)/20;
-  size = random(5, 200);
-  float packFactor = random(5, 50);
+  float packFactor = random(10, 35);//random(2, 10);
+  size = random(20, min(renderWidth, renderHeight)/2);
+
   space = ((min(renderHeight, renderWidth) - 2*border) - packFactor*size) / (packFactor - 1);
   cols = floor((renderWidth - 2*border) / (size + space));
   rows = floor((renderHeight - 2*border) / (size + space));
-  fidelity = floor(random(3, 10));
-  maxNoiseAngle = random(3) * TWO_PI;
-  noiseFieldRate = 1 / random(999, 999999);
+  fidelity = floor(random(3, 9));
+  maxNoiseAngle = random(4) * TWO_PI;
+  noiseFieldRate = 0.00001;
   midX = renderWidth/2;
   midY = renderHeight/2;
 
+  float genes = random(2, random(2, 10));
+  float life = constrain(100*genes*sin(genes)*sin(genes), 90, 100);// * genes, 0, 100);//*abs(sin(i)*sin(j));
+  float mass = constrain(size*life*sin(genes)*sin(genes), 50, midX); //size*random(genes);
+
+  //agents.add(new Agent(midX+ random(10), midY + random(10), life, mass, palette));
+
+  // A 'roughly' centered and even distribution grid to initialize agents
   for (int i = 0; i < cols + 1; i++) {
-
-
     for (float j = 0; j < rows +1; j ++) {
-
       //float r = layer * radius;
-      float offset = border;
+      float offset = 2* border;
 
-      float x = offset + i * size + (i > 1 ? space * i : 0);
-      float y = offset + j * size + (j > 1 ? space * j: 0);
+      float x = offset + size * i * (1/(1+sin(j) * sin(i)))+ (i >= 1 ? space * i : 0); //+ i * size + (i >= 1 ? space * i : 0);
+      float y = offset + size * j * (1/(1+sin(j) * sin(i)))+ (j >= 1 ? space * j: 0); //+ j * size + (j >= 1 ? space * j: 0);
 
-      float genes = random(2, random(2, 10));
-      float life = constrain(100 * genes, 0, 100);//*abs(sin(i)*sin(j));
-      float mass = random(size, size * genes);
-      color c = palettes[(int)(abs(cos(i+seed)*sin(j)*seed))%palettes.length];
+      genes = seed%100;//*pow(sin(i) * sin(i),1);
+      life = constrain(100*genes*sin(i)*sin(j), 75, 100);// * genes, 0, 100);//*abs(sin(i)*sin(j));
+      mass = constrain(size*life*sin(genes)*sin(genes), 50, midX/4); //size*random(genes);
 
-      agents.add(new Agent(x, y, life, mass, c));
+      agents.add(new Agent(x, y, life, mass, palette));
     }
   }
-  redraw();
 }
 
 // Render controls
@@ -184,14 +187,10 @@ void draw() {
 
 void magic(PGraphics r) {
   //setBackground(_render);
-  push();
   for (Agent agent : agents) {
-    r.pushMatrix();
     agent.run(r);
-    r.popMatrix();
   }
-  pop();
-    if (drawFrame) {
+  if (drawFrame) {
     drawFrame(_render);
   }
 }
@@ -199,28 +198,27 @@ void magic(PGraphics r) {
 // Set backgound
 void setBackground(PGraphics _render) {
   //_render.background(0); // Black BG
-  //_render.background(250); // White BG
-  _render.background(#E0C9A6); // Old Paper BG
+  _render.background(250); // White BG
+  //_render.background(#E0C9A6); // Old Paper BG
 }
 
 void drawFrame(PGraphics _render) {
   _render.noStroke();
   _render.fill(borderColor);
   //innerBorderPercent = innerBorderPercent / 100;
-  
+
   //outer
   _render.rect(0, 0, renderWidth, frame);
   _render.rect(renderWidth - frame, 0, frame, renderHeight);
   _render.rect(0, 0, frame, renderHeight);
   _render.rect(0, renderHeight - frame, renderWidth, frame);
-  
+
   ////inner
   ////_render.fill(0, 255);
   //_render.rect(border, border, renderWidth - 2*border, border*.05);
   //_render.rect(border, border, border * innerBorderPercent, renderHeight - 2*border);
   //_render.rect(border, renderHeight - border*(1+innerBorderPercent), renderWidth - 2*border, border * innerBorderPercent);
   //_render.rect(renderWidth - border*(1+innerBorderPercent), border, border * innerBorderPercent, renderHeight - 2*border);
-  
 }
 
 // Curated color palettes
@@ -233,4 +231,6 @@ color[][] myPalettes = {
   //{#ff0000, #ff8700, #ffd300, #deff0a, #a1ff0a, #0aff99, #0aefff, #147df5, #580aff, #be0aff}, //rainbow
   {#7E60BF, #0487D9, #038C73, #F29F05, #D92B04, #140400}, // simple rainbow
   {#06080D, #1B8EF2, #1A2E40, #22A2F2, #5CB9F2}, // blue & black
+  {#110E0E, #0A1214, #BAB3AB, #FE3603, #BFBA93, #ECE8C5, #F33030}, // koi
+  {#110E0E, #0B120B, #0A1214, #BAB3AB, #FDC70F, #FDF300, #FE3603, #FF3C1A, #BFBA93, #ECE8C5, #F33030, #40ACF7}, // deep koi
 };

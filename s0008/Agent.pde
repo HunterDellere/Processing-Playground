@@ -10,7 +10,7 @@ class Agent {
 
   Agent(float x, float y, float l, float m, color[] c) {
     pos = new PVector(x, y);
-    vel = new PVector(0, 0);
+    vel = PVector.fromAngle(noise(pos.x, pos.y)).setMag(random(5));//PVector.fromAngle(noise(pos.x, pos.y)).rotate(PI/2).setMag(randomGaussian() * 5);
     acc = new PVector(0, 0);
     prevPos = pos.copy();
     colors = c;
@@ -25,7 +25,9 @@ class Agent {
     this.follow();
     this.update();
     this.edges();
-    this.display(r);
+    if (life>0) {
+      this.display(r);
+    }
   }
 
   void update() {
@@ -33,86 +35,83 @@ class Agent {
     prevPos = pos.copy();
     pos.add(vel);
     vel.add(acc);
-    vel.limit(1);
+    vel.limit(5);
     acc.mult(0);
   }
 
   void display(PGraphics r) {
     float rad = mass; // radius
     PVector noiseV = PVector.fromAngle(noise(vel.x, vel.y, counter/mass) * maxNoiseAngle).setMag(2);
+    float step = TWO_PI/fidelity;
 
     float offset = vel.heading() + life/100;
 
     // Create the body of a shape by iterating over 2pi based on the fidelity parameter.
     // 3 - 10 can be used for most shapes
     // 10+ will increase the fidelity of the circle
-    r.noStroke();
-    r.fill(colors[(int)map(mass, 0, initialMass, 0, colors.length)%colors.length]);
-    r.beginShape();
-    for (int i = 0; i <= fidelity; i++) {
-      if (life > 5 && life < 95 && life % 30 < 10) {
-        float step = TWO_PI/fidelity;
+    //r.noStroke();
+    r.fill(colors[(int)map(mass, 0, initialMass, 0, colors.length-1)]);
+
+    if (life > 5) {
+      r.beginShape();
+      for (int i = 0; i <= fidelity; i++) {
         r.vertex(pos.x + mass * cos(step*i) + offset, pos.y + mass * sin(step*i) + offset);
       }
+      r.endShape(CLOSE);
     }
-    r.endShape(CLOSE);
 
     // Draw end caps
-    r.beginShape();
-    if (!active && life < 95 || !active && life == 0) {
+    if (active) {
       active = !active;
       this.drawEndCap(r);
     }
-    r.endShape(CLOSE);
 
     // Create a stoke at each point of the shape
-    r.stroke(colors[(int)map(mass, 0, initialMass, 0, colors.length*2+1)%colors.length]);
-    r.strokeWeight(map(mass, 0, initialMass, 0, initialMass % 50));
-    r.beginShape(POINTS);
-    for (int i = 0; i < fidelity + 1; i++) {
-      float step = TWO_PI/fidelity;
-      if (life > 4 && life < 95 && life % 30 < 10) {
+    if (life > 4) {
+      r.stroke((int)map(mass, 0, initialMass, 0, colors.length-2));
+      r.strokeWeight(map(mass, 0, initialMass, 0, initialMass % 10));
+
+      for (int i = 0; i < fidelity + 1; i++) {
         r.point(pos.x + rad * cos(step * i + offset ), pos.y + rad * sin(step * i + offset));
         //prevPos = pos.copy();
-      }
-      if (step * i > 4 * TWO_PI) {
-        //r.beginContour();
-        r.vertex(pos.x, pos.y);
-        r.vertex(pos.x + prevMass/2 * cos(step * (i-1)), pos.y + prevMass/2 * sin(step * (i-1)));
-        //r.endContour();
+        //if (step * i > 4 * TWO_PI) {
+        //  r.line(pos.x, pos.y, pos.x + prevMass/2 * cos(step * (i-1)), pos.y + prevMass/2 * sin(step * (i-1)));
+        //}
       }
     }
-    r.endShape();
 
     // Add crosshatching or other pattern style
-    r.beginShape();
-    r.stroke(colors[(int)map(mass, 0, initialMass, 0, colors.length)%colors.length]);
-    r.strokeWeight(map(mass, 0, initialMass, 1, 50));
-    r.noFill();
-    if (life <85 && life > 10 && life % 20 < 15) {
+    if (life > 20 && life < 70) {
       this.drawCrosshatch(r);
-      println("test");
     }
-    r.endShape();
   }
 
   // Draw an end cap on shapes
   void drawEndCap(PGraphics r) {
     float capRad = prevMass/2; // radius for the start & end cap
     float offset = vel.heading() + life/100;
-
-    // Add an end cap to the segment
     float step = TWO_PI/fidelity;
+    r.stroke(colors[(int)map(mass, 0, initialMass, 0, colors.length-2)]);
+    r.strokeWeight(map(mass, 0, initialMass/2, 1, 10));
+    r.noFill();
+
+    r.beginShape(LINES);
+
     for (int i = 0; i < fidelity+1; i++) {
       r.vertex(pos.x, pos.y);
       r.vertex(pos.x + capRad * cos(step * i) + offset, pos.y + capRad * sin(step * i) + offset);
     }
+    r.endShape();
   }
 
   void drawCrosshatch(PGraphics r) {
     float rad = mass;
     float capRad = prevMass; // radius for the start & end cap
     float offset = vel.heading() + life/100;
+
+    r.stroke(colors[(int)map(mass, 0, initialMass, 0, colors.length-3)]);
+    r.strokeWeight(map(mass, 0, initialMass/2, 1, 10));
+    r.noFill();
 
     //r.noFill();
     //r.stroke(colors[(int)map(mass, 0, initialMass, 0, colors.length*2+3)%colors.length]);
@@ -121,22 +120,25 @@ class Agent {
     float step = TWO_PI/fidelity;
     float scl = map(offset, 0, 100, 1, 10);
 
+    r.beginShape();
+
     for (int i = 0; i < (fidelity+1); i++) {
-      if (i%2 == 0) {
-        r.point(pos.x + rad * cos(step * scl * i ), pos.y + rad * sin(step * scl * i));
+      if ((i*fidelity)%3 == 0) {
+        r.vertex(pos.x + rad * cos(step * scl * i ), pos.y + rad * sin(step * scl * i));
         //r.vertex(pos.x, pos.y);
-        r.point(prevPos.x + capRad * cos(step * scl * (i-1)), prevPos.y + capRad * sin(step * scl * (i-1)));
+        r.vertex(prevPos.x + capRad * cos(step * scl * (i-1)), prevPos.y + capRad * sin(step * scl * (i-1)));
       }
-      if (i%5 == 0) {
+      if ((i*fidelity)%5 == 0) {
         //r.vertex(prevPos.x + capRad * cos(step * scl * (i-1)), prevPos.y + capRad * sin(step * scl * (i-1)));
-        r.point(pos.x, pos.y);
-        r.point(pos.x + rad * cos(step * scl * (i-2) ), pos.y + rad * sin(step * scl * (i-2)));
+        r.vertex(pos.x, pos.y);
+        r.vertex(pos.x + rad * cos(step * scl * (i-2) ), pos.y + rad * sin(step * scl * (i-2)));
       } else {
-        r.point(prevPos.x + capRad * cos(step * scl * (i-1)), prevPos.y + capRad * sin(step * scl * (i-1)));
+        r.vertex(prevPos.x + capRad * cos(step * scl * (i-1)), prevPos.y + capRad * sin(step * scl * (i-1)));
         //r.vertex(pos.x + rad * cos(step * scl * i ), pos.y + rad * sin(step * scl * i));
-        r.point(pos.x, pos.y);
+        r.vertex(pos.x, pos.y);
       }
     }
+    r.endShape();
   }
 
 
@@ -145,7 +147,7 @@ class Agent {
     if (life > 0) {
       prevMass = mass;
       mass = initialMass * sin(life/100) * sin(life/100);
-      life -= 0.055;
+      life -= 10/mass;
     } else {
       mass = 0;
     }
@@ -189,11 +191,11 @@ class Agent {
     noiseDetail(1); // # of octaves for the Perlin noise which correlate to character & detail.
     float midX = renderWidth / 2;
     float midY = renderHeight / 2;
-    PVector centerForce = new PVector(pos.x-midX, pos.y-midY).mult(mass / pow(dist(pos.x, pos.y, midX, midY),2));
+    PVector centerForce = new PVector(pos.x-midX, pos.y-midY).mult(mass / (1 * dist(pos.x, pos.y, midX, midY)));
     float dampen = pow(3, 6);
-    PVector force = PVector.fromAngle(noise(pos.x/dampen, pos.y/dampen, counter/dampen) * maxNoiseAngle);
-    force.sub(centerForce); // bring to center
-    force.setMag(.1);
+    PVector force = PVector.fromAngle(noise(pos.x/dampen, pos.y/dampen, counter/dampen) * maxNoiseAngle).normalize();
+    force.sub(centerForce.normalize()); // bring to center
+    //force.setMag(1);
     this.applyForce(force);
   }
 }

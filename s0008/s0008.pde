@@ -7,7 +7,6 @@ boolean drawFrame = false;
 
 // Paramaters
 int rows, cols;
-float size, space;
 int fidelity;
 float maxNoiseAngle;
 float noiseFieldRate;
@@ -15,8 +14,8 @@ float border, frame;
 float innerBorderPercent;
 
 // Print setup
-int printWidth = 4; // in inches
-int printHeight = 4; // in inches
+int printWidth = 10; // in inches
+int printHeight = 10; // in inches
 int printDpi = 350;
 int previewDpi = 72;
 int renderWidth;
@@ -72,21 +71,21 @@ void doReset() {
   // CONFIGURE PARAMETERS
 
   border = min(renderHeight, renderWidth)/20;
-  float packFactor = random(10, 35);//random(2, 10);
-  size = random(20, min(renderWidth, renderHeight)/2);
-
-  space = ((min(renderHeight, renderWidth) - 2*border) - packFactor*size) / (packFactor - 1);
-  cols = floor((renderWidth - 2*border) / (size + space));
-  rows = floor((renderHeight - 2*border) / (size + space));
+  float packFactor = random(10, 30);
+  float scl = 1000;
+  
+  float space = ((min(renderHeight, renderWidth)) - packFactor*scl) / (packFactor - 1);
+  cols = floor((renderWidth - 2*border) / (scl + space));
+  rows = floor((renderHeight - 2*border) / (scl + space));
   fidelity = floor(random(3, 9));
   maxNoiseAngle = random(4) * TWO_PI;
   noiseFieldRate = 0.00001;
   midX = renderWidth/2;
   midY = renderHeight/2;
 
-  float genes = random(2, random(2, 10));
+  float genes = randomGaussian() * 100;
   float life = constrain(100*genes*sin(genes)*sin(genes), 90, 100);// * genes, 0, 100);//*abs(sin(i)*sin(j));
-  float mass = constrain(size*life*sin(genes)*sin(genes), 50, midX); //size*random(genes);
+  float mass = scl*sin(genes)*sin(genes); //scl*random(genes);
 
   //agents.add(new Agent(midX+ random(10), midY + random(10), life, mass, palette));
 
@@ -94,14 +93,14 @@ void doReset() {
   for (int i = 0; i < cols + 1; i++) {
     for (float j = 0; j < rows +1; j ++) {
       //float r = layer * radius;
-      float offset = 2* border;
+      float offset = 0;
 
-      float x = offset + size * i * (1/(1+sin(j) * sin(i)))+ (i >= 1 ? space * i : 0); //+ i * size + (i >= 1 ? space * i : 0);
-      float y = offset + size * j * (1/(1+sin(j) * sin(i)))+ (j >= 1 ? space * j: 0); //+ j * size + (j >= 1 ? space * j: 0);
+      float x = offset + scl * i + (i >= 1 ? space * i : 0); //+ i * scl + (i >= 1 ? space * i : 0);
+      float y = offset + scl * j + (j >= 1 ? space * j: 0); //+ j * scl + (j >= 1 ? space * j: 0);
 
-      genes = seed%100;//*pow(sin(i) * sin(i),1);
-      life = constrain(100*genes*sin(i)*sin(j), 75, 100);// * genes, 0, 100);//*abs(sin(i)*sin(j));
-      mass = constrain(size*life*sin(genes)*sin(genes), 50, midX/4); //size*random(genes);
+      genes = randomGaussian() * 100;
+      life = genes*sin(i)*sin(j);
+      mass = scl*sin(genes)*sin(genes); //scl*random(genes);
 
       agents.add(new Agent(x, y, life, mass, palette));
     }

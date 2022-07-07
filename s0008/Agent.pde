@@ -24,7 +24,7 @@ class Agent {
   void run(PGraphics r) {
     this.follow();
     this.update();
-    this.edges();
+    //this.edges();
     if (life>0) {
       this.display(r);
     }
@@ -44,7 +44,7 @@ class Agent {
     PVector noiseV = PVector.fromAngle(noise(vel.x, vel.y, counter/mass) * maxNoiseAngle).setMag(2);
     float step = TWO_PI/fidelity;
 
-    float offset = vel.heading() + life/100;
+    float offset = (life/10)%(TAU); //vel.heading()
 
     // Create the body of a shape by iterating over 2pi based on the fidelity parameter.
     // 3 - 10 can be used for most shapes
@@ -55,20 +55,20 @@ class Agent {
     if (life > 5) {
       r.beginShape();
       for (int i = 0; i <= fidelity; i++) {
-        r.vertex(pos.x + mass * cos(step*i) + offset, pos.y + mass * sin(step*i) + offset);
+        r.vertex(pos.x + mass * cos(step*i+offset), pos.y + mass * sin(step*i+offset));
       }
       r.endShape(CLOSE);
     }
 
     // Draw end caps
-    if (active) {
+    if (life>500) {
       active = !active;
       this.drawEndCap(r);
     }
 
     // Create a stoke at each point of the shape
     if (life > 4) {
-      r.stroke((int)map(mass, 0, initialMass, 0, colors.length-2));
+      r.stroke((int)map(mass, 0, initialMass, 0, colors.length));
       r.strokeWeight(map(mass, 0, initialMass, 0, initialMass % 10));
 
       for (int i = 0; i < fidelity + 1; i++) {
@@ -81,21 +81,21 @@ class Agent {
     }
 
     // Add crosshatching or other pattern style
-    if (life > 20 && life < 70) {
+    if (life<1) {
       this.drawCrosshatch(r);
     }
   }
 
   // Draw an end cap on shapes
   void drawEndCap(PGraphics r) {
-    float capRad = prevMass/2; // radius for the start & end cap
-    float offset = vel.heading() + life/100;
+    float capRad = prevMass * .95; // radius for the start & end cap
+    float offset = life%(TAU); //vel.heading()
     float step = TWO_PI/fidelity;
-    r.stroke(colors[(int)map(mass, 0, initialMass, 0, colors.length-2)]);
+    r.stroke(colors[(int)map(mass, 0, initialMass, 0, colors.length)]);
     r.strokeWeight(map(mass, 0, initialMass/2, 1, 10));
     r.noFill();
 
-    r.beginShape(LINES);
+    r.beginShape();
 
     for (int i = 0; i < fidelity+1; i++) {
       r.vertex(pos.x, pos.y);
@@ -107,9 +107,9 @@ class Agent {
   void drawCrosshatch(PGraphics r) {
     float rad = mass;
     float capRad = prevMass; // radius for the start & end cap
-    float offset = vel.heading() + life/100;
+    float offset = vel.heading() + cos(life/100);
 
-    r.stroke(colors[(int)map(mass, 0, initialMass, 0, colors.length-3)]);
+    r.stroke(colors[(int)map(mass, 0, initialMass, 0, colors.length)]);
     r.strokeWeight(map(mass, 0, initialMass/2, 1, 10));
     r.noFill();
 
@@ -120,7 +120,7 @@ class Agent {
     float step = TWO_PI/fidelity;
     float scl = map(offset, 0, 100, 1, 10);
 
-    r.beginShape();
+    r.beginShape(POINTS);
 
     for (int i = 0; i < (fidelity+1); i++) {
       if ((i*fidelity)%3 == 0) {
@@ -147,7 +147,7 @@ class Agent {
     if (life > 0) {
       prevMass = mass;
       mass = initialMass * sin(life/100) * sin(life/100);
-      life -= 10/mass;
+      life -= 100/mass;
     } else {
       mass = 0;
     }
@@ -191,10 +191,11 @@ class Agent {
     noiseDetail(1); // # of octaves for the Perlin noise which correlate to character & detail.
     float midX = renderWidth / 2;
     float midY = renderHeight / 2;
-    PVector centerForce = new PVector(pos.x-midX, pos.y-midY).mult(mass / (1 * dist(pos.x, pos.y, midX, midY)));
+    PVector centerForce = new PVector(pos.x-midX, pos.y-midY).mult(6.674*pow(10, -4) * pow(mass, 2) / pow(dist(pos.x, pos.y, midX, midY), 2));
+    //centerForce.rotate(PI / 4);
     float dampen = pow(3, 6);
-    PVector force = PVector.fromAngle(noise(pos.x/dampen, pos.y/dampen, counter/dampen) * maxNoiseAngle).normalize();
-    force.sub(centerForce.normalize()); // bring to center
+    PVector force = PVector.fromAngle(noise(pos.x/dampen, pos.y/dampen, counter/dampen) * maxNoiseAngle);
+    //force.sub(centerForce); // bring to center
     //force.setMag(1);
     this.applyForce(force);
   }

@@ -72,39 +72,42 @@ void doReset() {
 
   border = min(renderHeight, renderWidth)/20;
   float packFactor = random(10, 30);
-  float scl = 1000;
-  
+  float scl = min(renderHeight, renderWidth);
+  fidelity = 2;//floor(random(3, 9));
+  maxNoiseAngle = random(8) * TWO_PI;
+  noiseFieldRate = 0.001;
+
   float space = ((min(renderHeight, renderWidth)) - packFactor*scl) / (packFactor - 1);
   cols = floor((renderWidth - 2*border) / (scl + space));
   rows = floor((renderHeight - 2*border) / (scl + space));
-  fidelity = floor(random(3, 9));
-  maxNoiseAngle = random(4) * TWO_PI;
-  noiseFieldRate = 0.00001;
   midX = renderWidth/2;
   midY = renderHeight/2;
 
-  float genes = randomGaussian() * 100;
-  float life = constrain(100*genes*sin(genes)*sin(genes), 90, 100);// * genes, 0, 100);//*abs(sin(i)*sin(j));
-  float mass = scl*sin(genes)*sin(genes); //scl*random(genes);
-
-  //agents.add(new Agent(midX+ random(10), midY + random(10), life, mass, palette));
-
-  // A 'roughly' centered and even distribution grid to initialize agents
-  for (int i = 0; i < cols + 1; i++) {
-    for (float j = 0; j < rows +1; j ++) {
-      //float r = layer * radius;
-      float offset = 0;
-
-      float x = offset + scl * i + (i >= 1 ? space * i : 0); //+ i * scl + (i >= 1 ? space * i : 0);
-      float y = offset + scl * j + (j >= 1 ? space * j: 0); //+ j * scl + (j >= 1 ? space * j: 0);
-
-      genes = randomGaussian() * 100;
-      life = genes*sin(i)*sin(j);
-      mass = scl*sin(genes)*sin(genes); //scl*random(genes);
-
-      agents.add(new Agent(x, y, life, mass, palette));
-    }
+  float genes;
+  float life; 
+  float mass; 
+  while (agents.size() < 1) {
+    genes = randomGaussian() * 1000;
+    life = constrain(100*genes*sin(genes)*sin(genes), 90, 100);// * genes, 0, 100);//*abs(sin(i)*sin(j));
+    mass = random(scl/2, scl); //scl*random(genes);
+    agents.add(new Agent(random(renderWidth/3, 2*renderWidth/3), random(0, 2*renderHeight/3), life, mass, palette));
   }
+  // A 'roughly' centered and even distribution grid to initialize agents
+  //for (int i = 0; i < cols + 1; i++) {
+  //  for (float j = 0; j < rows +1; j ++) {
+  //    //float r = layer * radius;
+  //    float offset = 0;
+
+  //    float x = offset + scl * i + (i >= 1 ? space * i : 0); //+ i * scl + (i >= 1 ? space * i : 0);
+  //    float y = offset + scl * j + (j >= 1 ? space * j: 0); //+ j * scl + (j >= 1 ? space * j: 0);
+
+  //    genes = randomGaussian() * 100;
+  //    life = genes*sin(i)*sin(j);
+  //    mass = scl*sin(genes)*sin(genes); //scl*random(genes);
+
+  //    agents.add(new Agent(x, y, life, mass, palette));
+  //  }
+  //}
 }
 
 // Render controls
@@ -197,8 +200,8 @@ void magic(PGraphics r) {
 // Set backgound
 void setBackground(PGraphics _render) {
   //_render.background(0); // Black BG
-  _render.background(250); // White BG
-  //_render.background(#E0C9A6); // Old Paper BG
+  //_render.background(250); // White BG
+  _render.background(#E0C9A6); // Old Paper BG
 }
 
 void drawFrame(PGraphics _render) {

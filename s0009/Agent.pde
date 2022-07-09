@@ -45,20 +45,20 @@ class Agent {
     PVector noiseV = PVector.fromAngle(noise(vel.x, vel.y, counter/mass) * maxNoiseAngle).setMag(2);
     float step = TWO_PI/fidelity;
 
-    float offset = pow(sin(mass/200), 3); //vel.heading()
+    float offset = pow(sin(initialMass/mass/200), 3)%TAU; //vel.heading()
 
     // Create the body of a shape by iterating over 2pi based on the fidelity parameter.
     // 3 - 10 can be used for most shapes
     // 10+ will increase the fidelity of the circle
     if (life > 3) {
-      r.beginShape();
-      r.strokeWeight(life/500);
-      r.stroke(0);
+      r.beginShape(LINES);
+      r.strokeWeight(mass/1000);
+      r.stroke(colors[(int)map(mass, 0, initialMass, 0, colors.length)]);
       r.fill(colors[(int)map(life, 0, 100, 0, colors.length)]);
       for (int i = 0; i <= fidelity; i++) {
         r.vertex(pos.x + mass * cos(step*i+offset), pos.y + mass * sin(step*i+offset));
       }
-      r.endShape(CLOSE);
+      r.endShape();
     }
 
     // Draw end caps
@@ -150,7 +150,7 @@ class Agent {
     if (life > 0) {
       prevMass = mass;
       mass = initialMass * sin(life/100) * sin(life/100);
-      life -= 75/mass;
+      life -= 50/mass;
     } else {
       mass = 0;
     }

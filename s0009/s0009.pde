@@ -1,7 +1,3 @@
-import processing.svg.*;
-
-import java.util.Collections;
-
 PGraphics _render;
 
 // Render configuration
@@ -78,9 +74,9 @@ void doReset() {
   border = min(renderHeight, renderWidth)/20;
   float packFactor = random(10, 30);
   float scl = min(renderHeight, renderWidth);
-  fidelity = floor(random(2, 25));
+  fidelity = floor(random(2, 100));
   maxNoiseAngle = random(2) * TWO_PI;
-  noiseFieldRate = 0.0000001;
+  noiseFieldRate = 0.000001;
 
   float space = ((min(renderHeight, renderWidth)) - packFactor*scl) / (packFactor - 1);
   cols = floor((renderWidth - 2*border) / packFactor);
@@ -93,10 +89,10 @@ void doReset() {
   float life;
   float mass;
 
-  while (agents.size() < random(5)) {
+  while (agents.size() < random(3)) {
     genes = randomGaussian() * 1000;
     life = random(80, 100);// * genes, 0, 100);//*abs(sin(i)*sin(j));
-    mass = random(scl/2, scl); //scl*random(genes);
+    mass = random(scl * 0.5, scl * 0.6); //scl*random(genes);
     agents.add(new Agent(renderWidth/2, renderHeight/2, life, mass, palette));
   }
 
@@ -162,7 +158,7 @@ void keyPressed() {
 
   case 'b':
     drawBorder = !drawBorder;
-    borderColor = myPalettes[4][floor(random(0, myPalettes[4].length))];
+    borderColor = myBackgrounds[(int)random(0, myBackgrounds.length)];
     frame = border * 1.05;
     println("Frame: " + (drawBorder ? "Enabled" : "Disabled"));
     break;
@@ -217,9 +213,7 @@ void magic(PGraphics r) {
 
 // Set backgound
 void setBackground(PGraphics _render) {
-  //_render.background(0); // Black BG
-  //_render.background(250); // White BG
-  _render.background(#E0C9A6); // Old Paper BG
+  _render.background(myBackgrounds[(int)random(0, myBackgrounds.length)]);
 }
 
 void drawBorder(PGraphics _render) {
@@ -272,4 +266,11 @@ color[][] myPalettes = {
   {#0b090a, #161a1d, #660708, #a4161a, #ba181b, #e5383b, #b1a7a6, #d3d3d3, #f5f3f4, #ffffff}, // Black, Red, Grey, White
   {#582f0e, #7f4f24, #936639, #a68a64, #b6ad90, #c2c5aa, #a4ac86, #656d4a, #414833, #333d29}, // Brown, Tan, Green
   {#fec5bb, #fcd5ce, #fae1dd, #f8edeb, #e8e8e4, #d8e2dc, #ece4db, #ffe5d9, #ffd7ba, #fec89a}, // muted red, green, orange
+};
+
+// Curated background colors
+color[] myBackgrounds = {
+  #E0C9A6, // Old Paper
+  #000005, // Black
+  #FFFFF5, // White
 };

@@ -51,8 +51,8 @@ class Agent {
     // 3 - 10 can be used for most shapes
     // 10+ will increase the fidelity of the circle
     if (life > initialMass % 5) {
-      r.beginShape(TRIANGLE);
-      r.strokeWeight(mass/300);
+      r.beginShape(LINES);
+      r.strokeWeight(mass/1000);
       r.stroke(colors[(int)map(mass, 0, initialMass, 0, colors.length)]);
       r.fill(colors[(int)map(life, 0, 100, 0, colors.length)]);
       //r.noFill();
@@ -69,7 +69,7 @@ class Agent {
     //}
 
     // Create a stoke at each point of the shape
-    if (life > initialMass % 5) {
+    if (life > 5) {
       r.stroke(colors[(int)map(mass, 0, initialMass, 0, colors.length-1)]);
       r.strokeWeight(map(mass, 0, initialMass, 0, initialMass % 5));
       r.noFill();
@@ -84,7 +84,7 @@ class Agent {
     }
 
     // Add crosshatching or other pattern style
-    if (life<5) {
+    if (life<10) {
       this.drawCrosshatch(r);
     }
     pop();

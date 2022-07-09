@@ -1,45 +1,46 @@
+import processing.svg.*;
+
+import processing.pdf.*;
+
 PGraphics _render;
 
 // Render configuration
-boolean renderHighRes = true;
+boolean highQuality = true;
 boolean capture = false;
+boolean svg = false;
 boolean drawBorder = false;
+
+// Print setup
+int printWidth = 30; // in inches
+int printHeight = 30; // in inches
+int printDpi = 350;
+int previewDpi = 70;
+int renderWidth, renderHeight;
+float mW, mH;
+float scaleFactor;
+int outWidth, outHeight;
+float border;
+color borderColor;
+String dateString;
+
+// Initialization
+int seed;
+boolean firstFrame;
+int counter = 0;
+
+// Variable creation
+ArrayList<Agent> agents = new ArrayList();
 
 // Paramaters
 int rows, cols;
 int fidelity;
 float maxNoiseAngle;
-float noiseFieldRate;
-float border, frame;
-float innerBorderPercent;
-
-// Print setup
-int printWidth = 12; // in inches
-int printHeight = 12; // in inches
-int printDpi = 350;
-int previewDpi = 72;
-int renderWidth, renderHeight;
-float mW, mH;
-float scaleFactor;
-int outWidth, outHeight;
-
-// Variable creation
-ArrayList <PVector> vectors = new ArrayList();
-ArrayList<Agent> agents = new ArrayList();
-color colors[] = new color[5];
-
-// Initialization
-int seed = 10;
-boolean firstFrame = true;
-int counter = 0;
-color borderColor;
-
+float incRate;
 
 // Setup
 
 void setup() {
-  size(1024, 1024, P2D);
-  //blendMode(BLEND);
+  size(1350, 1350, P2D);
   doReset();
 }
 
@@ -49,34 +50,44 @@ void doReset() {
   agents.clear();
   clear();
 
-  int dpi = renderHighRes ? printDpi : previewDpi;
+  // setup render dimensions
+  int dpi = highQuality ? printDpi : previewDpi;
   scaleFactor = dpi / (float)previewDpi;
   renderWidth = printWidth * dpi;
   renderHeight = printHeight * dpi;
   mW = renderWidth / 2;
   mH = renderHeight / 2;
+  border = min(mW, mH) * 0.05;
+
 
   _render = createGraphics(renderWidth, renderHeight, P2D);
+  _render.colorMode(HSB);
 
+  dateString = String.format("screenshots/%d%02d%02d_%02d%02d%02d", year(), month(), day(), hour(), minute(), second());
   firstFrame = true;
   drawBorder = false;
 
-  // set new parameters
+
+  // set new random seed
   seed = (int)random((float)99999999); // or manually set the seed
   println("The new seed is: " + seed);
   randomSeed(seed);
+  noiseSeed(seed);
 
-  // Load a palette from curated palettes
-  shuffleArray(myPalettes);
-  color[] palette = myPalettes[floor(random(0, myPalettes.length))];
+  /* Load a palette from curated palettes
+   The myPalettes variable doesn't reset when using doReset() and will only
+   reproduce the seeded result with a fresh run of the sketch.
+   This can be changed by managing a copy of myPalettes.
+   */
+  shuffleArray(myPalettes, seed);
+  color[] palette = myPalettes[(int)random(myPalettes.length)];
 
   // CONFIGURE PARAMETERS
-  border = min(renderHeight, renderWidth)/20;
   float packFactor = random(10, 30);
   float scl = min(renderHeight, renderWidth);
   fidelity = floor(random(2, 100));
   maxNoiseAngle = random(2) * TWO_PI;
-  noiseFieldRate = 0.000001;
+  incRate = 0.000001;
 
   float space = ((min(renderHeight, renderWidth)) - packFactor*scl) / (packFactor - 1);
   cols = floor((renderWidth - 2*border) / packFactor);
@@ -116,49 +127,60 @@ void doReset() {
 
 void keyPressed() {
   switch (key) {
-  case 's':
-    String dateString = String.format("screenshots/%d-%02d-%02d %02d.%02d.%02d", year(), month(), day(), hour(), minute(), second());
-    //saveFrame(dateString + ".scr.png");
-    _render.save(dateString + ".TIFF");
-    println("Screenshot saved");
+    /*
+    Spacebar - Reset sketch
+     Q        - Change quality
+     W        -
+     E        -
+     R        - Report
+     A        - Save a screenshot of the display as PNG
+     S        - Save high quality TIFF file from offscreen buffer
+     D        - Save a PDF version of the sketch
+     F        - Toggle GIF animation capture of the display (High disk usage)
+     B        - Toggle drawing a border around the sketch
+     */
+
+  case ' ':
+    doReset();
     break;
 
   case 'q':
-
-    //println("SVG Recording");
+    highQuality = !highQuality;
+    println(highQuality ? "High quality" : "Low quality");
+    doReset();
     break;
-
-  case 'w':
-
-    //println("SVG Saved");
-    break;
-
+    
   case 'r':
-    seed = (int)System.currentTimeMillis();
-    doReset();
+    println(floor(frameRate) + " fps");
     break;
 
-  case 'h':
-    renderHighRes = !renderHighRes;
-    println(renderHighRes ? "High Resolution" : "Low Resolution");
-    doReset();
+  case 'a':
+    //dateString = String.format("screenshots/%d%02d%02d_%02d%02d%02d", year(), month(), day(), hour(), minute(), second());
+    saveFrame(dateString + "_" + seed + "_png.png");
+    println("PNG screenshot saved.");
+    break;
+
+  case 's':
+    PImage img = _render.get();
+    img.save(dateString + "_" + seed + ".tif");
+    println("TIFF image saved.");
+    break;
+
+  case 'd':
+    svg = true;
+    println("SVG recording...");
+    // Start and stop recording managed in Draw
     break;
 
   case 'f':
-    println(frameRate);
-    break;
-
-  case 'c':
     capture = !capture;
-    println("Capture: " + (capture ? "Enabled" : "Disabled"));
+    println("Capture " + (capture ? "enabled." : "disabled."));
     break;
-
 
   case 'b':
     drawBorder = !drawBorder;
-    borderColor = myBackgrounds[(int)random(0, myBackgrounds.length)];
-    frame = border * 1.05;
-    println("Frame: " + (drawBorder ? "Enabled" : "Disabled"));
+    borderColor = myBackgrounds[(int)random(myBackgrounds.length)];
+    println("Border: " + (drawBorder ? "enabled" : "disabled"));
     break;
   }
 }
@@ -169,9 +191,13 @@ void keyPressed() {
 void draw() {
   _render.beginDraw();
 
+  if (svg) {
+    beginRecord(PDF, dateString + "_pdf.pdf");
+  }
+
   if (firstFrame) {
-    firstFrame = false;
     setBackground(_render);
+    firstFrame = false;
   }
 
   magic(_render);
@@ -180,21 +206,28 @@ void draw() {
 
   float ratio = renderWidth / (float)renderHeight;
   if (ratio > 1) {
-    outWidth = 1024;
+    outWidth = 1350;
     outHeight = (int)(outWidth / ratio);
   } else {
-    outHeight = 1024;
+    outHeight = 1350;
     outWidth = (int)(outHeight * ratio);
   }
 
-  image(_render, (1024 - outWidth) / 2, (1024 - outHeight) / 2, outWidth, outHeight);
+  image(_render, (1350 - outWidth) / 2, (1350 - outHeight) / 2, outWidth, outHeight);
 
   if (capture) {
     String _id = String.format("captures/%d%02d%02d.%02d.%02d/", year(), month(), day(), hour(), minute());
     saveFrame(_id + "#######" + ".tif");
   }
 
-  counter += noiseFieldRate;
+  if (svg) {
+    endRecord();
+    println("SVG Saved.");
+    svg = false;
+  }
+
+
+  counter += incRate;
 }
 
 // Where the magic happens
@@ -211,29 +244,37 @@ void magic(PGraphics r) {
 
 // Set backgound
 void setBackground(PGraphics _render) {
-  _render.background(myBackgrounds[(int)random(0, myBackgrounds.length)]);
+  //_render.background(myBackgrounds[(int)random(0, myBackgrounds.length)]);
+  _render.fill(myBackgrounds[(int)random(myBackgrounds.length)]);
+  _render.noStroke();
+  _render.rectMode(CENTER);
+  _render.rect(mW, mH, mW * 2, mH * 2);
 }
 
+// Draw a border around the sketch
 void drawBorder(PGraphics _render) {
   _render.noStroke();
-  _render.fill(borderColor);
-  //innerBorderPercent = innerBorderPercent / 100;
+  _render.rectMode(CENTER);
 
-  //outer
-  _render.rect(0, 0, renderWidth, frame);
-  _render.rect(renderWidth - frame, 0, frame, renderHeight);
-  _render.rect(0, 0, frame, renderHeight);
-  _render.rect(0, renderHeight - frame, renderWidth, frame);
-
-  ////inner
-  ////_render.fill(0, 255);
-  //_render.rect(border, border, renderWidth - 2*border, border*.05);
+  //inner
+  _render.fill(255);
+  _render.rect(mW, border * 0.6, mW*2, border);
+  _render.rect(renderWidth - border * 0.6, mH, border, renderHeight);
+  _render.rect(border * 0.6, mH, border, renderHeight);
+  _render.rect(mW, renderHeight - border * 0.6, renderWidth, border);
   //_render.rect(border, border, border * innerBorderPercent, renderHeight - 2*border);
   //_render.rect(border, renderHeight - border*(1+innerBorderPercent), renderWidth - 2*border, border * innerBorderPercent);
   //_render.rect(renderWidth - border*(1+innerBorderPercent), border, border * innerBorderPercent, renderHeight - 2*border);
+
+  //outer
+  _render.fill(borderColor);
+  _render.rect(mW, border * 0.5, mW*2, border);
+  _render.rect(renderWidth-border/2, mH, border, renderHeight);
+  _render.rect(border/2, mH, border, renderHeight);
+  _render.rect(mW, renderHeight - border/2, renderWidth, border);
 }
 
-void shuffleArray(int[][] a) {
+void shuffleArray(int[][] a, long seed) {
   int nbrCols = a.length;
   int nbrRows = a[0].length;
   for (int c = 0; c < nbrCols; c++) {

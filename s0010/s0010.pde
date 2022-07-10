@@ -89,7 +89,6 @@ void doReset() {
   maxNoiseAngle = random(2) * TWO_PI;
   incRate = 0.000001;
 
-  float space = ((min(renderHeight, renderWidth)) - packFactor*scl) / (packFactor - 1);
   cols = floor((renderWidth - 2*border) / packFactor);
   rows = floor((renderHeight - 2*border) / packFactor);
 
@@ -98,7 +97,7 @@ void doReset() {
   float life;
   float mass;
 
-  while (agents.size() < random(1)) {
+  while (agents.size() < random(2)) {
     genes = randomGaussian() * 1000;
     life = random(80, 100);// * genes, 0, 100);//*abs(sin(i)*sin(j));
     mass = random(scl * 0.5, scl * 0.6); //scl*random(genes);

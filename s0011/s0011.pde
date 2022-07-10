@@ -1,5 +1,3 @@
-import processing.svg.*;
-
 import processing.pdf.*;
 
 PGraphics _render;
@@ -11,8 +9,8 @@ boolean svg = false;
 boolean drawBorder = false;
 
 // Print setup
-int printWidth = 10; // in inches
-int printHeight = 10; // in inches
+int printWidth = 12; // in inches
+int printHeight = 12; // in inches
 int printDpi = 350;
 int previewDpi = 70;
 int renderWidth, renderHeight;
@@ -29,7 +27,8 @@ boolean firstFrame;
 int counter = 0;
 
 // Variable creation
-ArrayList<Agent> agents = new ArrayList();
+ArrayList<Agent> agents = new ArrayList<Agent>();
+color [] palette;
 
 // Paramaters
 int rows, cols;
@@ -69,7 +68,7 @@ void doReset() {
 
 
   // set new random seed
-  seed = (int)random((float)999999999); // or manually set the seed
+  seed =  (int)random((float)999999999); // or manually set the seed
   println("The new seed is: " + seed);
   randomSeed(seed);
   noiseSeed(seed);
@@ -80,26 +79,24 @@ void doReset() {
    This can be changed by managing a copy of myPalettes.
    */
   shuffleArray(myPalettes, seed);
-  color[] palette = myPalettes[floor(random(myPalettes.length))];
+  palette = myPalettes[floor(random(myPalettes.length))];
 
   // CONFIGURE PARAMETERS
-  float packFactor = random(1,5);
+  float packFactor = random(1, 2);
   float scl = min(renderHeight, renderWidth)/packFactor;
   fidelity = floor(random(2, 10));
   maxNoiseAngle = random(4) * TWO_PI;
-  incRate = 0.000001;
+  incRate = pow(0.01, 20);
 
   cols = floor((renderWidth - 2*border) / packFactor);
   rows = floor((renderHeight - 2*border) / packFactor);
 
   // create a specific number of agents
-  float genes;
   float life;
   float mass;
 
   while (agents.size() < random(1)) {
-    genes = randomGaussian() * 1000;
-    life = random(50, 500);// * genes, 0, 100);//*abs(sin(i)*sin(j));
+    life = 100;
     mass = random(scl, scl*2);
     agents.add(new Agent(mW, mH, life, mass, palette));
   }
@@ -148,7 +145,7 @@ void keyPressed() {
     println(highQuality ? "High quality" : "Low quality");
     doReset();
     break;
-    
+
   case 'r':
     println(floor(frameRate) + " fps");
     break;
@@ -189,21 +186,7 @@ void keyPressed() {
 // Draw
 
 void draw() {
-  _render.beginDraw();
-
-  if (svg) {
-    beginRecord(PDF, dateString + "_" + seed + "_pdf.pdf");
-  }
-
-  if (firstFrame) {
-    setBackground(_render);
-    firstFrame = false;
-  }
-
-  magic(_render);
-  _render.endDraw();
-
-
+  // Setup, display, and capture
   float ratio = renderWidth / (float)renderHeight;
   if (ratio > 1) {
     outWidth = 1350;
@@ -213,7 +196,41 @@ void draw() {
     outWidth = (int)(outHeight * ratio);
   }
 
-  image(_render, (1350 - outWidth) / 2, (1350 - outHeight) / 2, outWidth, outHeight);
+  if (svg) {
+    beginRecord(PDF, dateString + "_" + seed + "_pdf.pdf");
+  }
+
+  if (firstFrame) {
+    _render.beginDraw();
+    setBackground(_render);
+    image(_render, (1350 - outWidth) / 2, (1350 - outHeight) / 2, outWidth, outHeight);
+
+    firstFrame = false;
+  }
+
+  if (drawBorder) {
+    _render.beginDraw();
+    drawBorder(_render);
+    _render.endDraw();
+  }
+  while (agents.size() > 0) {
+    _render.beginDraw();
+    for (int i = 0; i < agents.size(); i++) {
+      Agent agent = agents.get(i);
+      agent.run(_render);
+
+      if (agent.life <= 0) {
+        agents.remove(i);
+      }
+    }
+    image(_render, (1350 - outWidth) / 2, (1350 - outHeight) / 2, outWidth, outHeight);
+    _render.endDraw();
+  }
+
+  if (agents.size() < 1) {
+    _render.endDraw();
+    image(_render, (1350 - outWidth) / 2, (1350 - outHeight) / 2, outWidth, outHeight);
+  }
 
   if (capture) {
     String _id = String.format("captures/%d%02d%02d.%02d.%02d/", year(), month(), day(), hour(), minute());
@@ -226,26 +243,18 @@ void draw() {
     svg = false;
   }
 
-
   counter += incRate;
 }
 
 // Where the magic happens
 
-void magic(PGraphics r) {
-  //setBackground(_render);
-  for (Agent agent : agents) {
-    agent.run(r);
-  }
-  if (drawBorder) {
-    drawBorder(_render);
-  }
-}
+//void magic(PGraphics r) {
+//}
 
 // Set backgound
 void setBackground(PGraphics _render) {
   //_render.background(myBackgrounds[(int)random(0, myBackgrounds.length)]);
-  color bgColor = color(myBackgrounds[floor(random(myBackgrounds.length))]);
+  color bgColor = color(myBackgrounds[(int)(random(myBackgrounds.length))]);
   _render.fill(bgColor);
   _render.noStroke();
   _render.rectMode(CENTER);

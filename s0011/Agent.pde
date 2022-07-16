@@ -41,17 +41,16 @@ class Agent {
   }
 
   void display(PGraphics r) {
-    push();
     float rad = mass; // radius
-    PVector noiseV = PVector.fromAngle(noise(pos.x/1000, pos.y/1000, mass/1000) * maxNoiseAngle).setMag(2);
-    float offset = sin(noiseV.heading())%TAU; //vel.heading()
+    PVector noiseV = PVector.fromAngle(noise(life/1000, life/1000, mass/1000) * maxNoiseAngle).setMag(2);
+    float offset = noiseV.heading()%TAU; //vel.heading()
     float step = TWO_PI/fidelity;
 
 
     // Create the body of a shape by iterating over 2pi based on the fidelity parameter.
     // 3 - 10 can be used for most shapes
     // 10+ will increase the fidelity of the circle
-    if (life > 5) {
+    if (life > 10) {
       r.beginShape(TRIANGLES);
       r.strokeWeight(mW * 0.4 / mass);
       r.stroke(colors[(int)map(mass, 0, initialMass, 0, colors.length-1)]);
@@ -62,8 +61,6 @@ class Agent {
       }
       r.endShape();
     }
-
-    pop();
   }
 
 
@@ -74,7 +71,7 @@ class Agent {
     if (life > 0) {
       prevMass = mass;
       mass = initialMass * sin(life/100) * sin(life/100);
-      life -= (life/2)/mass;
+      life -= (life * 0.8)/mass;
     } else {
       mass = 0;
     }

@@ -7,6 +7,7 @@ boolean highQuality = true;
 boolean capture = false;
 boolean svg = false;
 boolean drawBorder = false;
+boolean draw = true;
 
 // Print setup
 int printWidth = 12; // in inches
@@ -39,7 +40,8 @@ float incRate;
 // Setup
 
 void setup() {
-  size(1350, 1350, P2D);
+  size(750, 750, P2D);
+  //noLoop();
   doReset();
 }
 
@@ -62,7 +64,7 @@ void doReset() {
   _render = createGraphics(renderWidth, renderHeight, P2D);
   //_render.colorMode(HSB);
 
-  dateString = String.format("screenshots/%d%02d%02d_%02d%02d%02d", year(), month(), day(), hour(), minute(), second());
+  dateString = String.format("%d%02d%02d_%02d%02d%02d", year(), month(), day(), hour(), minute(), second());
   firstFrame = true;
   drawBorder = false;
 
@@ -84,7 +86,7 @@ void doReset() {
   // CONFIGURE PARAMETERS
   float packFactor = random(1, 2);
   float scl = min(renderHeight, renderWidth)/packFactor;
-  fidelity = floor(random(2, 10));
+  fidelity = floor(2);
   maxNoiseAngle = random(4) * TWO_PI;
   incRate = pow(0.01, 20);
 
@@ -146,20 +148,25 @@ void keyPressed() {
     doReset();
     break;
 
+  case 'e':
+    draw = false;
+    println("Exiting...");
+    break;
+
   case 'r':
     println(floor(frameRate) + " fps");
     break;
 
   case 'a':
     //dateString = String.format("screenshots/%d%02d%02d_%02d%02d%02d", year(), month(), day(), hour(), minute(), second());
-    saveFrame(dateString + "_" + seed + "_png.png");
+    saveFrame("screenshots/" + dateString + "_" + seed + "_png.png");
     println("PNG screenshot saved.");
     break;
 
   case 's':
     println("Saving TIFF image...");
     PImage img = _render.get();
-    img.save(dateString + "_" + seed + ".tif");
+    img.save("screenshots/" + dateString + "_" + seed + "_tif.tif");
     println("TIFF image saved.");
     break;
 
@@ -186,55 +193,50 @@ void keyPressed() {
 // Draw
 
 void draw() {
+  _render.beginDraw();
+
+
   // Setup, display, and capture
   float ratio = renderWidth / (float)renderHeight;
   if (ratio > 1) {
-    outWidth = 1350;
+    outWidth = 750;
     outHeight = (int)(outWidth / ratio);
   } else {
-    outHeight = 1350;
+    outHeight = 750;
     outWidth = (int)(outHeight * ratio);
   }
 
   if (svg) {
-    beginRecord(PDF, dateString + "_" + seed + "_pdf.pdf");
+    beginRecord(PDF, "screenshots/" + dateString + "_" + seed + "_pdf.pdf");
+    image(_render, (750 - outWidth) / 2, (750 - outHeight) / 2, outWidth, outHeight);
   }
 
   if (firstFrame) {
-    _render.beginDraw();
     setBackground(_render);
-    image(_render, (1350 - outWidth) / 2, (1350 - outHeight) / 2, outWidth, outHeight);
+    image(_render, (750 - outWidth) / 2, (750 - outHeight) / 2, outWidth, outHeight);
 
     firstFrame = false;
   }
 
   if (drawBorder) {
-    _render.beginDraw();
     drawBorder(_render);
-    _render.endDraw();
   }
-  while (agents.size() > 0) {
-    _render.beginDraw();
-    for (int i = 0; i < agents.size(); i++) {
-      Agent agent = agents.get(i);
-      agent.run(_render);
 
-      if (agent.life <= 0) {
-        agents.remove(i);
-      }
+  for (int i = 0; i < agents.size(); i++) {
+    Agent agent = agents.get(i);
+    agent.run(_render);
+    if (agent.life <= 0) {
+      agents.remove(i);
     }
-    image(_render, (1350 - outWidth) / 2, (1350 - outHeight) / 2, outWidth, outHeight);
-    _render.endDraw();
+    image(_render, (750 - outWidth) / 2, (750 - outHeight) / 2, outWidth, outHeight);
   }
 
-  if (agents.size() < 1) {
-    _render.endDraw();
-    image(_render, (1350 - outWidth) / 2, (1350 - outHeight) / 2, outWidth, outHeight);
-  }
 
   if (capture) {
-    String _id = String.format("captures/%d%02d%02d.%02d.%02d/", year(), month(), day(), hour(), minute());
-    saveFrame(_id + "#######" + ".tif");
+    //String _id = String.format("captures/%d%02d%02d.%02d.%02d/", year(), month(), day(), hour(), minute());
+    PImage img = _render.get();
+    img.save("captures/" + dateString + "/" + dateString + "_" + seed + frameCount + ".tif");
+    //save(_id + "#######" + ".tif");
   }
 
   if (svg) {
@@ -243,7 +245,11 @@ void draw() {
     svg = false;
   }
 
+  _render.endDraw();
+  image(_render, (750 - outWidth) / 2, (750 - outHeight) / 2, outWidth, outHeight);
+
   counter += incRate;
+  //redraw();
 }
 
 // Where the magic happens
@@ -312,6 +318,8 @@ color[][] myPalettes = {
   {#0b090a, #161a1d, #660708, #a4161a, #ba181b, #e5383b, #b1a7a6, #d3d3d3, #f5f3f4, #ffffff}, // Black, Red, Grey, White
   {#582f0e, #7f4f24, #936639, #a68a64, #b6ad90, #c2c5aa, #a4ac86, #656d4a, #414833, #333d29}, // Brown, Tan, Green
   {#fec5bb, #fcd5ce, #fae1dd, #f8edeb, #e8e8e4, #d8e2dc, #ece4db, #ffe5d9, #ffd7ba, #fec89a}, // muted red, green, orange
+  {#fca17d, #f9dbbd, #70d6ff, #064789, #114b5f}, // sunset
+  {#c53d07, #fb9a74, #f9dbbd, #70d6ff, #064789, #114b5f}, // deep sunset
 };
 
 // Curated background colors

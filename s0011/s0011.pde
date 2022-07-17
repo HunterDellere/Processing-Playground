@@ -4,6 +4,7 @@ PGraphics _render;
 
 // Render configuration
 boolean highQuality = true;
+boolean watch = true;
 boolean capture = false;
 boolean svg = false;
 boolean drawBorder = false;
@@ -26,6 +27,8 @@ String dateString;
 int seed;
 boolean firstFrame;
 int counter = 0;
+float incRate = pow(0.1, 6);
+
 
 // Variable creation
 ArrayList<Agent> agents = new ArrayList<Agent>();
@@ -35,7 +38,6 @@ color [] palette;
 int rows, cols;
 int fidelity;
 float maxNoiseAngle;
-float incRate;
 
 // Setup
 
@@ -80,7 +82,7 @@ void doReset() {
    reproduce the seeded result with a fresh run of the sketch.
    This can be changed by managing a copy of myPalettes.
    */
-  shuffleArray(myPalettes, seed);
+  //shuffleArray(myPalettes, seed);
   palette = myPalettes[floor(random(myPalettes.length))];
 
   // CONFIGURE PARAMETERS
@@ -97,7 +99,7 @@ void doReset() {
   float life;
   float mass;
 
-  while (agents.size() < random(1)) {
+  while (agents.size() < random(10)) {
     life = 100;
     mass = random(scl, scl*2);
     agents.add(new Agent(mW, mH, life, mass, palette));
@@ -148,6 +150,11 @@ void keyPressed() {
     doReset();
     break;
 
+  case 'w':
+    watch = !watch;
+    println(watch ? "Watching." : "Hiding.");
+    break;
+
   case 'e':
     draw = false;
     println("Exiting...");
@@ -172,7 +179,7 @@ void keyPressed() {
 
   case 'd':
     svg = true;
-    println("SVG recording...");
+    println("SVG saving...");
     // Start and stop recording managed in Draw
     break;
 
@@ -213,8 +220,6 @@ void draw() {
 
   if (firstFrame) {
     setBackground(_render);
-    image(_render, (750 - outWidth) / 2, (750 - outHeight) / 2, outWidth, outHeight);
-
     firstFrame = false;
   }
 
@@ -227,13 +232,14 @@ void draw() {
     agent.run(_render);
     if (agent.life <= 0) {
       agents.remove(i);
+      if (agents.size() < 1) {
+        println("Done rendering.");
+      }
     }
-    image(_render, (750 - outWidth) / 2, (750 - outHeight) / 2, outWidth, outHeight);
   }
 
 
   if (capture) {
-    //String _id = String.format("captures/%d%02d%02d.%02d.%02d/", year(), month(), day(), hour(), minute());
     PImage img = _render.get();
     img.save("captures/" + dateString + "/" + dateString + "_" + seed + frameCount + ".tif");
     //save(_id + "#######" + ".tif");
@@ -246,10 +252,11 @@ void draw() {
   }
 
   _render.endDraw();
-  image(_render, (750 - outWidth) / 2, (750 - outHeight) / 2, outWidth, outHeight);
-
+  if (watch) {
+    image(_render, (750 - outWidth) / 2, (750 - outHeight) / 2, outWidth, outHeight);
+  }
+  
   counter += incRate;
-  //redraw();
 }
 
 // Where the magic happens

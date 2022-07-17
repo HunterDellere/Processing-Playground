@@ -9,7 +9,7 @@ class Agent {
   float h, s, b; // colors
 
   Agent(float x, float y, float l, float m, color[] c) {
-    pos = new PVector(x, y);
+    pos = new PVector(x+random(-mW/2, mW/2),y + random(-mH/2, mH/2));
     vel = new PVector(0, 0);
     acc = new PVector(0, 0);
     initPos = pos.copy();
@@ -42,19 +42,19 @@ class Agent {
 
   void display(PGraphics r) {
     float rad = mass; // radius
-    PVector noiseV = PVector.fromAngle(noise(life/1000, life/1000, mass/1000) * maxNoiseAngle).setMag(2);
-    float offset = noiseV.heading()%TAU; //vel.heading()
+    PVector noiseV = PVector.fromAngle(life*mass); //PVector.fromAngle(noise(life/10, life/10, counter) * maxNoiseAngle).setMag(2);
+    float offset = noiseV.heading(); //vel.heading()
     float step = TWO_PI/fidelity;
 
 
     // Create the body of a shape by iterating over 2pi based on the fidelity parameter.
     // 3 - 10 can be used for most shapes
     // 10+ will increase the fidelity of the circle
-    if (life > 10) {
-      r.beginShape(TRIANGLES);
-      r.strokeWeight(mW * 0.4 / mass);
-      r.stroke(colors[(int)map(mass, 0, initialMass, 0, colors.length-1)]);
-      r.fill(colors[(int)map(life, 0, life, 0, colors.length-1)]);
+    if (abs(pow(sin(life), 1)) * 100 > 1) {
+      r.beginShape(LINES);
+      r.strokeWeight(5);
+      r.stroke(colors[(int)map(mass, 0, initialMass, 0, (colors.length-1) * fidelity)%colors.length]);
+      r.fill(colors[(int)map(life, 0, life, 0, (colors.length-1) * fidelity)%colors.length]);
       //r.noFill();
       for (int i = 0; i <= fidelity; i++) {
         r.vertex(pos.x + mass * cos(step*i+offset), pos.y + mass * sin(step*i+offset));
@@ -70,8 +70,8 @@ class Agent {
   void age() {
     if (life > 0) {
       prevMass = mass;
-      mass = initialMass * sin(life/100) * sin(life/100);
-      life -= (life * 0.8)/mass;
+      mass = prevMass * (life/100);
+      life -= 0.001 + mass % 0.05;
     } else {
       mass = 0;
     }
@@ -113,11 +113,11 @@ class Agent {
   // Control and apply a force to the agent
   void follow() {
     noiseDetail(1); // # of octaves for the Perlin noise which correlate to character & detail.
-    PVector centerForce = new PVector(pos.x-mW, pos.y-mH).setMag(pow(dist(pos.x, pos.y, mW, mH), 0.8));
+    PVector centerForce = new PVector(pos.x-mW, pos.y-mH).setMag(pow(dist(pos.x, pos.y, mW, mH), 10));
     //centerForce.rotate(PI / 4);
-    float dampen = pow(3, 6);
-    PVector force = PVector.fromAngle(noise(pos.x/dampen, pos.y/dampen, counter/dampen) * maxNoiseAngle).setMag(life/2);
-    //force.setMag(initialMass/100);
+    float dampen = pow(3, 1);
+    PVector force = PVector.fromAngle(noise(vel.x/dampen, vel.y/dampen, counter/dampen) * maxNoiseAngle);
+    force.setMag(initialMass/10);
     force.sub(centerForce); // bring to center
     this.applyForce(centerForce);
   }

@@ -25,10 +25,11 @@ class Agent {
   }
 
   void pack() {
+    int maxIter = 500;
     for (Agent agent : agents) {
       initialMass = mass;
 
-      for (int i =0; i < 100; i++) {
+      for (int i =0; i < maxIter; i++) {
 
         float otherX1 = agent.pos.x - agent.initialMass/2;
         float otherX2 = agent.pos.x + agent.initialMass/2;
@@ -41,14 +42,14 @@ class Agent {
 
 
         if (thisX1 > otherX2 || thisX2 < otherX1 || thisY1 > otherY2 || thisY2 < otherY1) {
-          i=100;
+          i=maxIter;
         } else {
           mass -= (initialMass * 0.01);
           //pos.x = random(initialMass, mW * 2 - initialMass);
           //pos.y = random(initialMass, mH * 2 - initialMass);
         }
 
-        if (i == 100 && mass != initialMass || mass < 50) {
+        if (i == maxIter && mass != initialMass || mass < 5) {
           life = 0;
           mass = 0;
           initialMass = 0;
@@ -77,8 +78,8 @@ class Agent {
 
   void display(PGraphics r) {
     r.strokeWeight(5);
-    r.stroke(colors[floor(random(colors.length))]);
-    r.fill(colors[(int)map(life, 0, life, 0, (colors.length) * fidelity)%colors.length]);
+    r.stroke(colors[ceil(abs(pow(sin(life*mass/10), 1)) * (colors.length-1))]);
+    //r.fill(colors[(int)map(life, 0, 100, 0, (colors.length) * fidelity)%colors.length]);
     //r.noFill();
     r.rectMode(CENTER);
     r.rect(pos.x, pos.y, mass, mass);
@@ -92,7 +93,7 @@ class Agent {
     if (life > 1) {
       prevMass = mass;
       mass = prevMass * (life/100);
-      life -= 0.001 + mass % 0.05;
+      life -= 0.0001 + mass % 0.05;
     } else {
       mass = 0;
       life = 0;

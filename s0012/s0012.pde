@@ -86,20 +86,22 @@ void doReset() {
   palette = myPalettes[floor(random(myPalettes.length))];
 
   // CONFIGURE PARAMETERS
-  float packFactor = random(1, 15);
+  float packFactor = random(1, 2);
   float scl = min(renderHeight, renderWidth)/packFactor;
-  fidelity = floor(2);
+  fidelity = floor(5);
   maxNoiseAngle = random(4) * TWO_PI;
   incRate = pow(0.01, 20);
 
-  cols = floor((renderWidth - 2*border) / packFactor);
-  rows = floor((renderHeight - 2*border) / packFactor);
+  cols = floor((renderWidth) / packFactor);
+  rows = floor((renderHeight) / packFactor);
 
   // create a specific number of agents
   float initLife;
   float initMass;
+  int maxAgents = floor((mW * mH)/random(1500, 10000));
 
-  while (agents.size() < 1000) {
+  while (agents.size() < maxAgents) {
+    if(agents.size() % 100 == 0) {println(agents.size() + " agents spawned of " + maxAgents);}
     //palette = myPalettes[floor(random(myPalettes.length))];
 
     initLife = 100;
@@ -112,11 +114,11 @@ void doReset() {
     for (int i = 0; i < agents.size(); i++) {
       Agent agent = agents.get(i);
       if (agent.isDead()) {
-        println("ded");
         agents.remove(i);
       }
     }
   }
+  println("Agents spawned");
 }
 
 // Render controls

@@ -99,7 +99,7 @@ void doReset() {
   float initLife;
   float initMass;
 
-  while (agents.size() < 100) {
+  while (agents.size() < 1000) {
     //palette = myPalettes[floor(random(myPalettes.length))];
 
     initLife = 100;

@@ -48,7 +48,7 @@ class Agent {
           //pos.y = random(initialMass, mH * 2 - initialMass);
         }
 
-        if (i == 100 && mass != initialMass || mass < mW * 0.2) {
+        if (i == 100 && mass != initialMass || mass < 50) {
           life = 0;
           mass = 0;
           initialMass = 0;

@@ -86,7 +86,7 @@ void doReset() {
   palette = myPalettes[floor(random(myPalettes.length))];
 
   // CONFIGURE PARAMETERS
-  float packFactor = random(1, 2);
+  float packFactor = random(1, 15);
   float scl = min(renderHeight, renderWidth)/packFactor;
   fidelity = floor(2);
   maxNoiseAngle = random(4) * TWO_PI;
@@ -96,13 +96,26 @@ void doReset() {
   rows = floor((renderHeight - 2*border) / packFactor);
 
   // create a specific number of agents
-  float life;
-  float mass;
+  float initLife;
+  float initMass;
 
-  while (agents.size() < random(1)) {
-    life = 100;
-    mass = random(scl, scl*2);
-    agents.add(new Agent(mW, mH, life, mass, palette));
+  while (agents.size() < 100) {
+    //palette = myPalettes[floor(random(myPalettes.length))];
+
+    initLife = 100;
+    initMass = random(scl);
+    float x = random(initMass, mW * 2 - initMass);
+    float y = random(initMass, mH * 2 - initMass);
+    agents.add(new Agent(x, y, initLife, initMass, palette));
+
+    // remove dead agents
+    for (int i = 0; i < agents.size(); i++) {
+      Agent agent = agents.get(i);
+      if (agent.isDead()) {
+        println("ded");
+        agents.remove(i);
+      }
+    }
   }
 }
 
@@ -213,7 +226,7 @@ void draw() {
   for (int i = 0; i < agents.size(); i++) {
     Agent agent = agents.get(i);
     agent.run(_render);
-    if (agent.life <= 0) {
+    if (agent.life <= 1) {
       agents.remove(i);
       if (agents.size() < 1) {
         println("Done rendering.");
@@ -238,7 +251,7 @@ void draw() {
   if (watch) {
     image(_render, (750 - outWidth) / 2, (750 - outHeight) / 2, outWidth, outHeight);
   }
-  
+
   counter += incRate;
 }
 
@@ -277,7 +290,7 @@ void drawBorder(PGraphics _render) {
   _render.rect(mW, renderHeight - border/2, renderWidth, border);
 }
 
-void shuffleArray(int[][] a, long seed) {
+void shuffleArray(int[][] a) {
   int nbrCols = a.length;
   int nbrRows = a[0].length;
   for (int c = 0; c < nbrCols; c++) {

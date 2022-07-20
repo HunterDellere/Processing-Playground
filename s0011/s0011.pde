@@ -105,22 +105,6 @@ void doReset() {
     agents.add(new Agent(mW, mH, life, mass, palette));
   }
 
-  //A 'roughly' centered and even distribution grid to initialize agents
-  //  for (int i = 0; i < cols + 1; i++) {
-  //  for (float j = 0; j < rows +1; j ++) {
-  //    //float r = layer * radius;
-  //    float offset = 0;
-
-  //    float x = offset + scl/cols * i; //+ i * scl + (i >= 1 ? space * i : 0);
-  //    float y = offset + scl/rows * j; //+ j * scl + (j >= 1 ? space * j: 0);
-
-  //    genes = randomGaussian() * 1000;
-  //    life = random(80, 100);// * genes, 0, 100);//*abs(sin(i)*sin(j));
-  //    mass = random(packFactor); //scl*random(genes);
-
-  //    agents.add(new Agent(x, y, life, mass, palette));
-  //  }
-  //}
 }
 
 // Render controls

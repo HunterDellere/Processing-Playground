@@ -71,7 +71,7 @@ class Agent {
     if (life > 0) {
       prevMass = mass;
       mass = prevMass * (life/100);
-      life -= 0.001 + mass % 0.05;
+      life -= max(0.00001, 100 % (1 / initialMass));
     } else {
       mass = 0;
     }

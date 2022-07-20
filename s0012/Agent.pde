@@ -20,12 +20,47 @@ class Agent {
     initialMass = mass;
 
     active = true;
+
+    this.pack();
+  }
+
+  void pack() {
+    for (Agent agent : agents) {
+      initialMass = mass;
+
+      for (int i =0; i < 100; i++) {
+
+        float otherX1 = agent.pos.x - agent.initialMass/2;
+        float otherX2 = agent.pos.x + agent.initialMass/2;
+        float thisX1 = pos.x - mass/2;
+        float thisX2 = pos.x + mass/2;
+        float otherY1 = agent.pos.y - agent.initialMass/2;
+        float otherY2 = agent.pos.y + agent.initialMass/2;
+        float thisY1 = pos.y - mass/2;
+        float thisY2 = pos.y + mass/2;
+
+
+        if (thisX1 > otherX2 || thisX2 < otherX1 || thisY1 > otherY2 || thisY2 < otherY1) {
+          i=100;
+        } else {
+          mass -= (initialMass * 0.01);
+          //pos.x = random(initialMass, mW * 2 - initialMass);
+          //pos.y = random(initialMass, mH * 2 - initialMass);
+        }
+
+        if (i == 100 && mass != initialMass || mass < mW * 0.2) {
+          life = 0;
+          mass = 0;
+          initialMass = 0;
+        }
+      }
+    }
   }
 
   void run(PGraphics r) {
-    this.follow();
+    //this.follow();
     this.update();
-    //this.edges();
+    this.edges();
     if (life>=1) {
       this.display(r);
     }
@@ -41,18 +76,12 @@ class Agent {
   }
 
   void display(PGraphics r) {
-    float rad = mass; // radius
-    PVector noiseV = PVector.fromAngle(life*mass); //PVector.fromAngle(noise(life/10, life/10, counter) * maxNoiseAngle).setMag(2);
-    float offset = noiseV.heading(); //vel.heading()
-    float step = TWO_PI/fidelity;
-
     r.strokeWeight(5);
-    r.stroke(colors[(int)map(mass, 0, initialMass, 0, (colors.length-1) * fidelity)%colors.length]);
-    r.fill(colors[(int)map(life, 0, life, 0, (colors.length-1) * fidelity)%colors.length]);
+    r.stroke(colors[floor(random(colors.length))]);
+    r.fill(colors[(int)map(life, 0, life, 0, (colors.length) * fidelity)%colors.length]);
     //r.noFill();
     r.rectMode(CENTER);
-    r.rect(pos.x, pos.y, mass/2, mass/2);
-    
+    r.rect(pos.x, pos.y, mass, mass);
   }
 
 
@@ -60,12 +89,13 @@ class Agent {
 
   // Change characteristics of the agent life their influence (mass) and their life span.
   void age() {
-    if (life > 0) {
+    if (life > 1) {
       prevMass = mass;
       mass = prevMass * (life/100);
       life -= 0.001 + mass % 0.05;
     } else {
       mass = 0;
+      life = 0;
     }
   }
 
@@ -112,5 +142,14 @@ class Agent {
     force.setMag(initialMass/10);
     force.sub(centerForce); // bring to center
     this.applyForce(centerForce);
+  }
+
+  // Is the particle still useful?
+  boolean isDead() {
+    if (life <= 0.0) {
+      return true;
+    } else {
+      return false;
+    }
   }
 }

@@ -241,9 +241,9 @@ void draw() {
 
     if (agent.isDead()) {
       agents.remove(i);
-      if (agents.size()%100 == 0) {
-        println(agents.size() + " agents remaining.");
-      }
+      //if (agents.size()%100 == 0) {
+      //  println(agents.size() + " agents remaining.");
+      //}
     }
   }
 

@@ -104,8 +104,8 @@ void doReset() {
   float initMass;
   int maxAgents = floor((mW * mH)/ (2 * scl));
 
+  println("Spawning agents...");
   while (agents.size() < maxAgents) {
-    println("Spawning agents...");
 
     //// Periodic updates on spawning
     //if (agents.size() % 1000 == 0) {

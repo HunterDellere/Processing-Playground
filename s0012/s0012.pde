@@ -3,7 +3,7 @@ import processing.pdf.*;
 PGraphics _render;
 
 // Render configuration
-int numRenders = 10;
+int numRenders = 200;
 int renderCount = 0;
 boolean highQuality = true;
 boolean watch = true;
@@ -45,6 +45,7 @@ float maxNoiseAngle;
 
 void setup() {
   size(750, 750, P2D);
+  colorMode(HSB);
   //noLoop();
   doReset();
 }
@@ -53,7 +54,7 @@ void setup() {
 
 void doReset() {
   clear();
-  //agents.clear();
+  loop();
 
   agents = new ArrayList<Agent>();
 
@@ -68,7 +69,7 @@ void doReset() {
 
 
   _render = createGraphics(renderWidth, renderHeight, P2D);
-  //_render.colorMode(HSB);
+  _render.colorMode(HSB);
 
   dateString = String.format("%d%02d%02d_%02d%02d%02d", year(), month(), day(), hour(), minute(), second());
   firstFrame = true;
@@ -77,7 +78,7 @@ void doReset() {
 
   // set new random seed
   seed =  (int)random((float)999999999); // or manually set the seed
-  println("The new seed is: " + seed);
+  println("The current seed is: " + seed);
   randomSeed(seed);
   noiseSeed(seed);
 
@@ -90,27 +91,29 @@ void doReset() {
   palette = myPalettes[floor(random(myPalettes.length))];
 
   // CONFIGURE PARAMETERS
-  float packFactor = random(1, 20);
+  fidelity = floor(random(3,15)); // <2 not currently implemented
+  float packFactor = random(4, 20);
   float scl = min(renderHeight, renderWidth)/packFactor;
-  fidelity = floor(5);
-  maxNoiseAngle = random(4) * TWO_PI;
-  incRate = pow(0.01, 20);
+  int maxAgents = floor((mW * mH)/ (2 * scl));
 
-  cols = floor((renderWidth) / packFactor);
-  rows = floor((renderHeight) / packFactor);
+  maxNoiseAngle = random(5) * TWO_PI;
+  incRate = pow(0.01, 20);
 
   // create a specific number of agents
   float initLife;
   float initMass;
-  int maxAgents = floor((mW * mH)/ (2 * scl));
 
   println("Spawning " + maxAgents + " agents...");
   while (agents.size() < maxAgents) {
+    int agentCount = 0;
 
-    //// Periodic updates on spawning
-    //if (agents.size() % 1000 == 0) {
-    //  println(agents.size() + " agents spawned of " + maxAgents);
-    //}
+    // Periodic updates on spawning
+    if (millis() % 3000.0 == 0.0) {
+      if (agents.size() > agentCount) {
+        agentCount = agents.size();
+        println(agents.size() + " of " + maxAgents + " agents spawned...");
+      }
+    }
 
     //palette = myPalettes[floor(random(myPalettes.length))];
 
@@ -149,12 +152,20 @@ void keyPressed() {
      */
 
   case ' ':
+    println("Resetting...");
+    println("  ");
+    println("--====--====--====--====--====--====--====--");
+    println("  ");
     doReset();
     break;
 
   case 'q':
     highQuality = !highQuality;
-    println(highQuality ? "High quality" : "Low quality");
+    //println(highQuality ? "High quality" : "Low quality");
+    println("  ");
+    println("--====--====--====--====--====--====--====--");
+    println("  ");
+    println("Rendering with " + (highQuality ? "high quality..." : "low quality..."));
     doReset();
     break;
 
@@ -344,18 +355,18 @@ void shuffleArray(int[][] a) {
 
 // Curated color palettes
 color[][] myPalettes = {
-  {#E63946, #f1faee, #a8dadc, #457b9d, #1d3557},
-  {#264653, #2a9d8f, #e9c46a, #f4a261, #e76f51},
-  {#264653, #2a9d8f, #e9c46a, #f4a261, #e76f51},
-  {#001219, #005f73, #0a9396, #94d2bd, #e9d8a6, #ee9b00, #ca6702, #bb3e03, #ae2012, #9b2226},
-  {#f8f9fa, #e9ecef, #dee2e6, #ced4da, #adb5bd, #6c757d, #495057, #343a40, #212529, #212529},
+  //{#E63946, #f1faee, #a8dadc, #457b9d, #1d3557},
+  //{#264653, #2a9d8f, #e9c46a, #f4a261, #e76f51},
+  //{#264653, #2a9d8f, #e9c46a, #f4a261, #e76f51},
+  //{#001219, #005f73, #0a9396, #94d2bd, #e9d8a6, #ee9b00, #ca6702, #bb3e03, #ae2012, #9b2226},
+  //{#f8f9fa, #e9ecef, #dee2e6, #ced4da, #adb5bd, #6c757d, #495057, #343a40, #212529, #212529},
   {#ff0000, #ff8700, #ffd300, #deff0a, #a1ff0a, #0aff99, #0aefff, #147df5, #580aff, #be0aff}, //rainbow
   {#7E60BF, #0487D9, #038C73, #F29F05, #D92B04, #140400}, // simple rainbow
   {#06080D, #1B8EF2, #1A2E40, #22A2F2, #5CB9F2}, // blue & black
   {#110E0E, #0A1214, #BAB3AB, #FE3603, #BFBA93, #ECE8C5, #F33030}, // koi
   {#110E0E, #0B120B, #0A1214, #BAB3AB, #FDC70F, #FDF300, #FE3603, #FF3C1A, #BFBA93, #ECE8C5, #F33030, #40ACF7}, // deep koi
   {#03071e, #370617, #6a040f, #9d0208, #d00000, #dc2f02, #e85d04, #f48c06, #faa307, #ffba08},
-  {#007f5f, #2b9348, #55a630, #80b918, #aacc00, #bfd200, #d4d700, #dddf00, #eeef20, #ffff3f}, // lime
+  //{#007f5f, #2b9348, #55a630, #80b918, #aacc00, #bfd200, #d4d700, #dddf00, #eeef20, #ffff3f}, // lime
   {#0b090a, #161a1d, #660708, #a4161a, #ba181b, #e5383b, #b1a7a6, #d3d3d3, #f5f3f4, #ffffff}, // Black, Red, Grey, White
   {#582f0e, #7f4f24, #936639, #a68a64, #b6ad90, #c2c5aa, #a4ac86, #656d4a, #414833, #333d29}, // Brown, Tan, Green
   {#fec5bb, #fcd5ce, #fae1dd, #f8edeb, #e8e8e4, #d8e2dc, #ece4db, #ffe5d9, #ffd7ba, #fec89a}, // muted red, green, orange

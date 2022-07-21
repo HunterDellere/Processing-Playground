@@ -50,7 +50,7 @@ class Agent {
         if (thisX1 > otherX2 || thisX2 < otherX1 || thisY1 > otherY2 || thisY2 < otherY1) {
           i=maxIter; // if the agents are proved not touching, set index to end.
         } else {
-          mass -= (initialMass * 0.02); // decrease agent's mass if it can't be proven to be not touching
+          mass -= mass * 0.01; // decrease agent's mass if it can't be proven to be not touching
           life -= life * 0.03;
           //pos.x = random(initialMass, mW * 2 - initialMass);
           //pos.y = random(initialMass, mH * 2 - initialMass);
@@ -82,17 +82,32 @@ class Agent {
   }
 
   void display(PGraphics r) {
+    float dampen = random(0.0001, 0.001) ;
     r.rectMode(CENTER);
-    if (mass == initialMass) {
-      r.fill(0);
-      r.rect(pos.x, pos.y, xMod*initialMass, yMod*initialMass);
-    }
-    //r.strokeWeight(2);
-    //r.stroke(colors[ceil(abs(pow(sin(mass*life/initialMass), 2)) * (colors.length-1))]);
-    r.fill(colors[ceil(xMod * abs(pow(sin(xMod*yMod*life/10), 3)) * (colors.length-1)) % (colors.length-1)]);
+
+    //r.translate(pos.x, pos.y);
     //r.noFill();
-    r.noStroke();
-    r.rect(pos.x, pos.y, xMod*mass-20, yMod*mass-20);
+    //r.noStroke();
+    r.beginShape();
+    if (fidelity < 3) {
+      r.strokeWeight(200);
+      r.stroke(colors[ceil(xMod * abs(pow(sin(xMod*yMod*life/20), 2)) * (colors.length)) % (colors.length-1)]);
+    }
+    
+    pushMatrix();
+
+    r.translate(mW, mH);
+    r.rotate(noise(mW, mH, life*dampen) * maxNoiseAngle);
+    r.fill(colors[ceil(xMod * abs(pow(sin(xMod*yMod*life/20), 2)) * (colors.length)) % (colors.length-1)]);
+
+    for (int i = 0; i < fidelity; i++) {
+      r.vertex(pos.x + xMod*mass * cos(TAU * i / fidelity), pos.y + yMod*mass * sin(TAU * i / fidelity));
+    }
+
+    r.endShape(CLOSE);
+
+    //r.rect(pos.x, pos.y, (xMod*mass) + mass * pow(sin(life/initialMass), 2), (yMod*mass) + mass * pow(sin(life/initialMass), 2));
+    popMatrix();
   }
 
 
@@ -101,7 +116,7 @@ class Agent {
   // Change characteristics of the agent life their influence (mass) and their life span.
   void age() {
     if (life > 1) {
-      life -= .2;//.5; //0.0001 + mass % 0.05;
+      life -= 0.2;//.5; //0.0001 + mass % 0.05;
       mass = initialMass * (life/100);
     } else {
       mass = 0;

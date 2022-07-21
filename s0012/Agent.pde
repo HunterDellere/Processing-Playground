@@ -25,26 +25,29 @@ class Agent {
   }
 
   void pack() {
-    int maxIter = 500;
+    int maxIter = 500 + agents.size();
     for (Agent agent : agents) {
       initialMass = mass;
+      float otherX1 = agent.pos.x - agent.initialMass/2;
+      float otherX2 = agent.pos.x + agent.initialMass/2;
+      float otherY1 = agent.pos.y - agent.initialMass/2;
+      float otherY2 = agent.pos.y + agent.initialMass/2;
 
       for (int i =0; i < maxIter; i++) {
 
-        float otherX1 = agent.pos.x - agent.initialMass/2;
-        float otherX2 = agent.pos.x + agent.initialMass/2;
+
         float thisX1 = pos.x - mass/2;
         float thisX2 = pos.x + mass/2;
-        float otherY1 = agent.pos.y - agent.initialMass/2;
-        float otherY2 = agent.pos.y + agent.initialMass/2;
+
         float thisY1 = pos.y - mass/2;
         float thisY2 = pos.y + mass/2;
 
 
         if (thisX1 > otherX2 || thisX2 < otherX1 || thisY1 > otherY2 || thisY2 < otherY1) {
-          i=maxIter;
+          i=maxIter; // if the agents are proved not touching, set index to end.
         } else {
-          mass -= (initialMass * 0.01);
+          mass -= (initialMass * 0.02); // decrease agent's mass if it can't be proven to be not touching
+          life -= life * 0.03;
           //pos.x = random(initialMass, mW * 2 - initialMass);
           //pos.y = random(initialMass, mH * 2 - initialMass);
         }
@@ -61,7 +64,7 @@ class Agent {
   void run(PGraphics r) {
     //this.follow();
     this.update();
-    this.edges();
+    //this.edges();
     if (life>=1) {
       this.display(r);
     }
@@ -77,12 +80,17 @@ class Agent {
   }
 
   void display(PGraphics r) {
-    r.strokeWeight(5);
-    r.stroke(colors[ceil(abs(pow(sin(life*mass/10), 1)) * (colors.length-1))]);
-    //r.fill(colors[(int)map(life, 0, 100, 0, (colors.length) * fidelity)%colors.length]);
-    //r.noFill();
     r.rectMode(CENTER);
-    r.rect(pos.x, pos.y, mass, mass);
+    if (life == 100) {
+      r.fill(0);
+      r.rect(pos.x, pos.y, initialMass, initialMass);
+    }
+    r.strokeWeight(2);
+    r.stroke(colors[ceil(abs(pow(sin(mass*life/initialMass), 2)) * (colors.length-1))]);
+    r.fill(colors[ceil(abs(pow(sin(mass*life), 3)) * (colors.length-1))]);
+    r.noFill();
+    //r.noStroke();
+    r.rect(pos.x, pos.y, mass-20, mass-20);
   }
 
 
@@ -91,9 +99,8 @@ class Agent {
   // Change characteristics of the agent life their influence (mass) and their life span.
   void age() {
     if (life > 1) {
-      prevMass = mass;
-      mass = prevMass * (life/100);
-      life -= 0.0001 + mass % 0.05;
+      life -= 1;//.5; //0.0001 + mass % 0.05;
+      mass = initialMass * (life/100);
     } else {
       mass = 0;
       life = 0;
@@ -147,7 +154,7 @@ class Agent {
 
   // Is the particle still useful?
   boolean isDead() {
-    if (life <= 0.0) {
+    if (life <= 0.1) {
       return true;
     } else {
       return false;

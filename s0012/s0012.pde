@@ -3,6 +3,8 @@ import processing.pdf.*;
 PGraphics _render;
 
 // Render configuration
+int numRenders = 50;
+int renderCount = 0;
 boolean highQuality = true;
 boolean watch = true;
 boolean capture = false;
@@ -31,7 +33,7 @@ float incRate = pow(0.1, 6);
 
 
 // Variable creation
-ArrayList<Agent> agents = new ArrayList<Agent>();
+ArrayList<Agent> agents;
 color [] palette;
 
 // Paramaters
@@ -50,8 +52,10 @@ void setup() {
 // Reset
 
 void doReset() {
-  agents.clear();
   clear();
+  //agents.clear();
+
+  agents = new ArrayList<Agent>();
 
   // setup render dimensions
   int dpi = highQuality ? printDpi : previewDpi;
@@ -86,7 +90,7 @@ void doReset() {
   palette = myPalettes[floor(random(myPalettes.length))];
 
   // CONFIGURE PARAMETERS
-  float packFactor = random(1, 2);
+  float packFactor = random(1, 20);
   float scl = min(renderHeight, renderWidth)/packFactor;
   fidelity = floor(5);
   maxNoiseAngle = random(4) * TWO_PI;
@@ -98,10 +102,16 @@ void doReset() {
   // create a specific number of agents
   float initLife;
   float initMass;
-  int maxAgents = floor((mW * mH)/random(1500, 10000));
+  int maxAgents = floor((mW * mH)/ (2 * scl));
 
   while (agents.size() < maxAgents) {
-    if(agents.size() % 100 == 0) {println(agents.size() + " agents spawned of " + maxAgents);}
+    println("Spawning agents...");
+
+    //// Periodic updates on spawning
+    //if (agents.size() % 1000 == 0) {
+    //  println(agents.size() + " agents spawned of " + maxAgents);
+    //}
+
     //palette = myPalettes[floor(random(myPalettes.length))];
 
     initLife = 100;
@@ -118,7 +128,7 @@ void doReset() {
       }
     }
   }
-  println("Agents spawned");
+  println("All " + agents.size() + " agents spawned.");
 }
 
 // Render controls
@@ -228,10 +238,11 @@ void draw() {
   for (int i = 0; i < agents.size(); i++) {
     Agent agent = agents.get(i);
     agent.run(_render);
-    if (agent.life <= 1) {
+
+    if (agent.isDead()) {
       agents.remove(i);
-      if (agents.size() < 1) {
-        println("Done rendering.");
+      if (agents.size()%100 == 0) {
+        println(agents.size() + " agents remaining.");
       }
     }
   }
@@ -250,8 +261,29 @@ void draw() {
   }
 
   _render.endDraw();
+
   if (watch) {
     image(_render, (750 - outWidth) / 2, (750 - outHeight) / 2, outWidth, outHeight);
+  }
+
+  // if no agents remain, save the render and start again until numRenders
+  if (agents.size() < 1) {
+    println("Done rendering.");
+
+    println("Saving render " + (renderCount + 1) + " of " + numRenders + "...");
+    beginRecord(PDF, "screenshots/" + dateString + "_" + seed + "_pdf.pdf");
+    image(_render, (750 - outWidth) / 2, (750 - outHeight) / 2, outWidth, outHeight);
+    endRecord();
+    svg = false;
+    println("Render saved.");
+    if (renderCount < numRenders - 1) {
+      println("Resetting...");
+      renderCount++;
+      doReset();
+    } else {
+      println("All renders complete.");
+      noLoop();
+    }
   }
 
   counter += incRate;

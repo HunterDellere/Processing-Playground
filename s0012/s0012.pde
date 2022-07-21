@@ -3,7 +3,7 @@ import processing.pdf.*;
 PGraphics _render;
 
 // Render configuration
-int numRenders = 50;
+int numRenders = 10;
 int renderCount = 0;
 boolean highQuality = true;
 boolean watch = true;
@@ -104,7 +104,7 @@ void doReset() {
   float initMass;
   int maxAgents = floor((mW * mH)/ (2 * scl));
 
-  println("Spawning agents...");
+  println("Spawning " + maxAgents + " agents...");
   while (agents.size() < maxAgents) {
 
     //// Periodic updates on spawning
@@ -278,6 +278,10 @@ void draw() {
     println("Render saved.");
     if (renderCount < numRenders - 1) {
       println("Resetting...");
+      println("  ");
+      println("--====--====--====--====--====--====--====--");
+      println("  ");
+
       renderCount++;
       doReset();
     } else {
